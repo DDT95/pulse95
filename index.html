@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="Pulse 95 — carte expérimentale de la pression territoriale dans le Val-d’Oise au fil de la journée." />
+  <title>Pulse 95 · Pression territoriale · DDT 95</title>
+  <link rel="preconnect" href="https://unpkg.com" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <link rel="stylesheet" href="style.css?v=1" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="https://ddt95.github.io/atlas-territorial-95/" aria-label="Retour à l’Atlas territorial">
+      <img src="prefet-val-doise.svg" alt="Préfet du Val-d’Oise" />
+    </a>
+    <div class="title-block"><span>Observatoire expérimental</span><strong>Pulse 95</strong><small>La pression territoriale, heure par heure</small></div>
+    <div class="live"><i></i><span><b>Modèle V1</b><small>Données ouvertes · profils estimés</small></span></div>
+    <a class="back" href="https://ddt95.github.io/atlas-territorial-95/">← Atlas</a>
+  </header>
+
+  <main class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <section class="intro">
+        <p class="eyebrow">PRESSION TERRITORIALE · VAL-D’OISE</p>
+        <h1>Voir le territoire<br /><em>respirer.</em></h1>
+        <p>Un indice synthétique pour repérer les lieux où mobilités, présence humaine, bruit et chaleur se cumulent.</p>
+      </section>
+
+      <section class="mode-panel">
+        <label for="indicator">Indicateur affiché</label>
+        <select id="indicator">
+          <option value="global">Indice global</option>
+          <option value="road">Pression routière</option>
+          <option value="transit">Transports collectifs</option>
+          <option value="presence">Présence humaine</option>
+          <option value="active">Piétons & vélos</option>
+          <option value="noise">Bruit</option>
+          <option value="heat">Chaleur</option>
+        </select>
+      </section>
+
+      <section class="weights">
+        <div class="section-head"><div><span>Pondérations</span><small>Ajustez la composition de l’indice</small></div><button id="resetWeights">Réinitialiser</button></div>
+        <div id="weightControls"></div>
+      </section>
+
+      <section class="method-card">
+        <span>MÉTHODE V1</span>
+        <p>La grille de 500 m combine des polarités territoriales et des profils horaires types. Elle constitue un démonstrateur, pas une mesure en temps réel.</p>
+        <button id="openMethod">Sources & méthode →</button>
+      </section>
+    </aside>
+
+    <section class="map-area">
+      <div id="map" aria-label="Carte animée de la pression territoriale du Val-d’Oise"></div>
+      <button class="mobile-panel" id="mobilePanel">☰ Indicateurs</button>
+      <div class="map-heading"><span id="mapKicker">INDICE GLOBAL</span><strong id="timeLabel">08:00</strong></div>
+      <div class="legend"><span>Pression faible</span><div class="gradient"></div><span>Très forte</span></div>
+      <div class="timeline-card">
+        <button id="play" aria-label="Lire l’animation"><span>▶</span></button>
+        <div class="timeline-main">
+          <div class="time-row"><strong id="periodLabel">Pointe du matin</strong><span><b id="hourValue">08 h</b> / 23 h</span></div>
+          <input id="hour" type="range" min="6" max="23" value="8" step="1" />
+          <div class="ticks"><span>06 h</span><span>09 h</span><span>12 h</span><span>15 h</span><span>18 h</span><span>21 h</span><span>23 h</span></div>
+        </div>
+      </div>
+      <div class="selection-card" id="selectionCard" hidden>
+        <button id="closeSelection" aria-label="Fermer">×</button>
+        <span>MAILLE SÉLECTIONNÉE · <b id="cellHour">08 H</b></span>
+        <div class="score"><strong id="cellScore">78</strong><small>/100<br />indice global</small></div>
+        <p id="cellPlace">Secteur de Pontoise</p>
+        <div id="cellDetails"></div>
+      </div>
+    </section>
+  </main>
+
+  <dialog id="methodDialog">
+    <button class="dialog-close" id="closeMethod">×</button>
+    <p class="eyebrow">TRANSPARENCE</p><h2>Sources & méthode</h2>
+    <p>Pulse 95 est une première maquette fonctionnelle. Les valeurs sont des indices comparatifs de 0 à 100, pas des comptages bruts.</p>
+    <div class="source-grid">
+      <article><b>Route</b><span>Axes structurants et intensités relatives, enrichissables par les comptages routiers.</span></article>
+      <article><b>Transports</b><span>Gares et pôles IDFM/SNCF, associés à des profils de pointe matin et soir.</span></article>
+      <article><b>Présence</b><span>Polarités résidentielles, commerciales et d’emploi issues d’un modèle territorial.</span></article>
+      <article><b>Mobilité douce</b><span>Centralités et itinéraires structurants ; Strava Metro pourra remplacer ce proxy.</span></article>
+      <article><b>Bruit</b><span>Proximité relative aux grands axes et aux secteurs aéroportuaires.</span></article>
+      <article><b>Chaleur</b><span>Intensité urbaine et profil diurne maximal en milieu d’après-midi.</span></article>
+    </div>
+    <p class="warning">À ce stade, l’animation horaire est modélisée. Toute intégration de données observées sera documentée ici avec sa date, sa maille et ses limites.</p>
+  </dialog>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script src="app.js?v=1"></script>
+</body>
+</html>
