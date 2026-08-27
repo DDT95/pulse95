@@ -1,8 +1,11 @@
 # Pulse 95
 
-Observatoire expérimental de la pression territoriale du Val-d’Oise, heure par heure.
+Carte des mobilités du Val-d’Oise, heure par heure.
 
-La V1 propose une grille de 500 m, six composantes, des pondérations configurables et une animation de 06 h à 23 h. Les profils horaires sont modélisés et explicitement signalés comme tels dans l’interface.
+- Affluence ferroviaire : validations IDFM du 4e trimestre 2025, jour ouvré hors vacances scolaires.
+- Trafic routier : état des tronçons Sytadin / DIRIF, actualisé par le site transport95.
+
+Le fichier `data/idfm-validations.json` est construit depuis les API publiques PRIM par `scripts/build_idfm.py`. Aucun score territorial synthétique n’est calculé.
 
 ## Publication
 
