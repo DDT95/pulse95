@@ -23,3 +23,4 @@
 @media(max-width:700px){.stress-evidence{grid-template-columns:1fr}.stress-evidence p{border-right:0;border-bottom:1px solid #e5e9ee}.synthesis-now,.synthesis-columns{grid-template-columns:1fr 1fr}.detail-panel h2{font-size:27px}}
 .synthesis-dialog{overflow:auto}
 .stress-why{margin:0!important;padding:10px 13px!important;background:#fff;color:#343d4c!important;font-size:10px!important;line-height:1.45!important}.stress-why b{display:block;margin-bottom:3px;color:var(--stress);font-size:7px;letter-spacing:.08em}
+.stress-evidence{grid-template-columns:1fr 1fr}.stress-source{display:block;padding:7px 12px;border-top:1px solid #e5e9ee;color:#7a8595!important;font-size:7px!important;font-weight:600}
