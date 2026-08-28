@@ -137,6 +137,9 @@ state.layers.stations=L.layerGroup().addTo(map);
 state.layers.equipment=L.layerGroup();
 state.layers.temperature=L.layerGroup();
 state.layers.heat=L.layerGroup();
+state.layers.incidents=L.layerGroup();
+state.layers.airLive=L.layerGroup();
+const pressureExtra={incidents:[],airLive:[]};
 state.layers.roadNoise = roadNoise;
 state.layers.railNoise = railNoise;
 roadNoise.addTo(map);
@@ -551,18 +554,20 @@ async function showNuisancesAt(lon, lat) {
   const commune=communeAt(lon,lat),code=String(commune?.properties?.code||commune?.properties?.insee||commune?.properties?.INSEE_COM||""),air=state.stats[code],ban=await reverseBan(lon,lat),artificial=await sampleArtificial(lon,lat),localAirNoise=sampleAirNoise(latlng);
   const currentHour=Math.max(6,Math.min(23,new Date().getHours())),dailyMax=Math.max(...(pressureData.stations||[]).map(s=>s.weekdayAverage||0),1),hourlyMax=Math.max(...(pressureData.stations||[]).map(s=>s.hourly?.[currentHour]||0),1),stationHits=(pressureData.stations||[]).map(s=>{const ratio=Math.sqrt((s.weekdayAverage||0)/dailyMax),radius=800+700*ratio,d=distanceMeters(lon,lat,s.lon,s.lat),distanceFactor=Math.pow(Math.max(0,1-d/radius),.7);return{...s,d,radius,ratio,distanceFactor,hourValue:s.hourly?.[currentHour]||0}}).filter(s=>s.d<=s.radius).sort((a,b)=>b.hourValue*b.distanceFactor-a.hourValue*a.distanceFactor),busHits=(pressureData.stops||[]).map(s=>({...s,d:distanceMeters(lon,lat,s.lon,s.lat)})).filter(s=>s.d<=300),mobility5=Math.min(5,(stationHits[0]?.hourValue||0)/hourlyMax*4.5*(stationHits[0]?.distanceFactor||0)+Math.min(.5,busHits.reduce((n,s)=>n+.08*(1-s.d/300),0)));
   const equipmentHits=(pressureData.equipment||[]).map(p=>({...p,d:distanceMeters(lon,lat,p.lon,p.lat)})).filter(p=>p.d<=750),equipmentMass=equipmentHits.reduce((n,p)=>n+Math.max(0,1-p.d/750),0),equipmentScore=Math.min(5,5*Math.log1p(equipmentMass)/Math.log(41));
-  const traffic=trafficFresh?sampleTrafficAt(lon,lat):null,roadScore=Math.max(roadDb?Math.min(5,Math.max(0,(roadDb-40)/7)):0,road[0]?.cat?6-road[0].cat:0,traffic?.label==="saturé"?5:traffic?.label==="ralenti"?3:traffic?0.5:0),railScore=Math.max(railDb?Math.min(5,Math.max(0,(railDb-50)/5)):0,rail[0]?.cat?6-rail[0].cat:0);
+  const traffic=trafficFresh?sampleTrafficAt(lon,lat):null,nearestIncident=pressureExtra.incidents.map(i=>({...i,d:distanceMeters(lon,lat,i.lon,i.lat)})).filter(i=>i.d<=400).sort((a,b)=>b.mag-a.mag)[0],incidentScore=nearestIncident?Math.min(5,1+nearestIncident.mag):0,roadScore=Math.max(roadDb?Math.min(5,Math.max(0,(roadDb-40)/7)):0,road[0]?.cat?6-road[0].cat:0,traffic?.label==="saturé"?5:traffic?.label==="ralenti"?3:traffic?0.5:0,incidentScore),railScore=Math.max(railDb?Math.min(5,Math.max(0,(railDb-50)/5)):0,rail[0]?.cat?6-rail[0].cat:0);
   const airScore=localAirNoise,heatFeature=featureAtPoint(lon,lat,pressureData.heat),heatDay=heatFeature?Number(heatFeature.properties.day)+1:null,temp=(pressureData.temperaturePoints||[]).map(p=>({...p,d:distanceMeters(lon,lat,p.lon,p.lat)})).sort((a,b)=>a.d-b.d)[0],weather=weatherStress(temp),heatExtreme=Math.max(Number(temp?.temperature),Number(temp?.apparent))>=27,climateScore=weather.score==null&&heatDay==null?null:Math.max(weather.score||0,heatExtreme?Math.min(5,heatDay||0):0);
   const aircraftNear=movingAircraft.map(a=>{const p=a.marker.getLatLng();return distanceMeters(lon,lat,p.lng,p.lat)}).filter(d=>d<=5000),aircraftScore=Math.min(5,aircraftNear.length),artificialScore=artificial==null?null:Math.min(2,2*artificial.share**2);
+  const AIR_LIVE_RADIUS=8000,nearestAirLive=pressureExtra.airLive.map(s=>({...s,d:distanceMeters(lon,lat,s.lon,s.lat)})).sort((a,b)=>a.d-b.d)[0],airLiveInRange=nearestAirLive&&nearestAirLive.d<=AIR_LIVE_RADIUS?nearestAirLive:null,airLiveDecay=airLiveInRange?Math.max(0,1-airLiveInRange.d/AIR_LIVE_RADIUS):0,airLiveScore=airLiveInRange&&airLiveInRange.worst!=null?Math.min(5,airLiveInRange.worst*2.5)*airLiveDecay:null;
   const rows=[
     {name:"Mobilité & fréquentation",score:mobility5,value:stationHits[0]?`${stationHits[0].name} · ${fmt(stationHits[0].hourValue)} validations entre ${currentHour} h et ${currentHour+1} h · à ${fmt(stationHits[0].d)} m`:`${busHits.length} arrêt(s) à moins de 300 m`,why:stationHits[0]?`La gare atteint ${fmt((stationHits[0].hourValue/hourlyMax)*100)} % du maximum départemental à cette heure, puis son influence décroît avec la distance (${fmt(stationHits[0].distanceFactor*100)} % conservés ici).`:"Aucune gare n’exerce d’influence sur ce point ; seuls les arrêts proches contribuent.",detail:`Décroissance continue du centre jusqu’à 0 au bord du rayon · ${busHits.length} arrêt(s) proches`,source:"IDFM · profil horaire du jour ouvré moyen · heure actuelle"},
     {name:"Équipements & services",score:equipmentScore,value:`${equipmentHits.length} lieux à moins de 750 m · masse pondérée ${fmt(equipmentMass,1)}`,why:`Les ${equipmentHits.length} lieux ne comptent pas tous entièrement : chacun perd progressivement son influence avec la distance. La masse équivalente au point est ${fmt(equipmentMass,1)}.`,detail:"Décroissance linéaire jusqu’à 750 m puis progression logarithmique",source:"BPE Insee + OpenStreetMap · millésimes publiés"},
-    {name:"Pression routière",score:roadScore,value:`${roadDb?`${roadDb}–${roadDb+5} dB(A) · `:""}${traffic?`trafic ${traffic.label}`:trafficFresh?"trafic local non lu":"trafic temps réel indisponible"}`,why:road[0]?`Le point se trouve dans le secteur affecté par une infrastructure de catégorie ${road[0].cat}${roadDb?` et dans une classe sonore de ${roadDb} à ${roadDb+5} dB(A)`:""}. La valeur la plus contraignante fixe la note.`:"Aucun secteur réglementaire routier classé ne couvre le point ; seul le bruit mesuré ou le trafic actuel peut contribuer.",detail:road[0]?`Classement sonore catégorie ${road[0].cat} · arrêté n°17-146${traffic?" · état actuel intégré":""}`:"Hors secteur routier classé",source:`DDT 95 · Bruitparif · ${trafficFresh?"Sytadin actuel":"Sytadin ancien : exclu de la note"}`},
+    {name:"Pression routière",score:roadScore,value:`${roadDb?`${roadDb}–${roadDb+5} dB(A) · `:""}${traffic?`trafic ${traffic.label}`:trafficFresh?"trafic local non lu":"trafic temps réel indisponible"}${nearestIncident?" · incident à "+fmt(nearestIncident.d)+" m":""}`,why:nearestIncident?`Un incident TomTom (accident, travaux ou fermeture) est signalé à ${fmt(nearestIncident.d)} m ; sa sévérité fixe ou dépasse la note.`:road[0]?`Le point se trouve dans le secteur affecté par une infrastructure de catégorie ${road[0].cat}${roadDb?` et dans une classe sonore de ${roadDb} à ${roadDb+5} dB(A)`:""}. La valeur la plus contraignante fixe la note.`:"Aucun secteur réglementaire routier classé ne couvre le point ; seul le bruit mesuré ou le trafic actuel peut contribuer.",detail:road[0]?`Classement sonore catégorie ${road[0].cat} · arrêté n°17-146${traffic?" · état actuel intégré":""}`:"Hors secteur routier classé",source:`DDT 95 · Bruitparif · ${trafficFresh?"Sytadin actuel":"Sytadin ancien : exclu de la note"}${nearestIncident?" · TomTom incidents":""}`},
     {name:"Pression ferroviaire",score:railScore,value:railDb?`${railDb}–${railDb+5} dB(A)`:"Pas de niveau sonore local",why:rail[0]?`Le point appartient au secteur affecté d’une voie ferrée de catégorie ${rail[0].cat} ; le niveau raster et la catégorie la plus sévère déterminent la note.`:"Le point est hors des secteurs ferroviaires classés et aucun niveau sonore ferroviaire local n’est détecté.",detail:rail[0]?`Classement sonore catégorie ${rail[0].cat} · arrêté n°16249`:"Hors secteur ferroviaire classé",source:"DDT 95 · SNCF/RATP/SGP · classement réglementaire"},
     {name:"Air & bruit",score:airScore,value:localAirNoise?`Coexposition locale : classe ${localAirNoise}/5`:"Classe locale indisponible",why:localAirNoise?`La couleur du raster au point correspond directement à la classe locale ${localAirNoise}/5 ; les pourcentages communaux sont conservés comme contexte, sans remplacer la mesure locale.`:"Le raster local ne fournit pas de classe exploitable à ce point.",detail:air?`Commune : air dégradé ${fmt(air.air_degrade_pct,1)} % · bruit dégradé ${fmt(air.bruit_degrade_pct,1)} %`:"Contexte communal indisponible",source:"Airparif + Bruitparif · raster local 2024"},
     {name:"Météo & extrêmes",score:climateScore,value:temp?`${fmt(temp.temperature,1)} °C · ressenti ${fmt(temp.apparent,1)} °C · ${weather.detail}`:"Observation indisponible",why:climateScore?`Un phénomène actuel ou une température extrême active la pression météo ; l’aléa morphoclimatique renforce uniquement les épisodes chauds.`:"Les températures sont dans la plage ordinaire et aucun phénomène météo notable n’ajoute de stress.",detail:heatExtreme&&heatDay?`Extrême thermique : aléa morphoclimatique ${heatDay}/5 intégré`:"Température ordinaire : aucun stress thermique ajouté",source:`Open-Meteo · observation ${temp?.time||"actuelle"} · IPR`},
     {name:"Artificialisation",score:artificial==null?null:Math.min(5,artificial.share*5),contribution:artificialScore,value:artificial==null?"Lecture indisponible":`${fmt(artificial.share*100)} % de sols bâtis ou minéraux autour du point`,why:artificial?`La note affichée traduit directement la part bâtie ou minérale observée dans le disque de 200 m. Pour le cumul territorial, sa contribution reste secondaire : 2 × part², avec un maximum de 2/5. Les jardins, pelouses, boisements et autres couvertures végétales restent non minéralisés. Au point exact, la couverture est ${artificial.atPoint?"bâtie ou minérale":"végétalisée ou naturelle"}.`:"Lecture locale indisponible.",detail:"Note observée = part × 5 · contribution au cumul = 2 × part² · plafond 2/5",source:"OCS GE IGN · couverture du sol 2024-2026 · disque de 200 m"},
-    {name:"Trafic aérien",score:aircraftScore,value:`${aircraftNear.length} aéronef(s) à moins de 5 km`,why:aircraftNear.length?`${aircraftNear.length} aéronef(s) sont actuellement observés dans le voisinage du point ; la pression augmente avec leur nombre.`:"Aucun aéronef n’est actuellement observé dans un rayon de 5 km.",detail:"1 niveau de stress par aéronef proche, plafonné à 5",source:`ADSB.lol · positions en direct · ${new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}`}
+    {name:"Trafic aérien",score:aircraftScore,value:`${aircraftNear.length} aéronef(s) à moins de 5 km`,why:aircraftNear.length?`${aircraftNear.length} aéronef(s) sont actuellement observés dans le voisinage du point ; la pression augmente avec leur nombre.`:"Aucun aéronef n’est actuellement observé dans un rayon de 5 km.",detail:"1 niveau de stress par aéronef proche, plafonné à 5",source:`ADSB.lol · positions en direct · ${new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}`},
+    {name:"Qualité de l’air en direct",score:airLiveScore,value:airLiveInRange?`${esc(airLiveInRange.name)} · ${Object.entries(airLiveInRange.readings).map(([k,r])=>`${k} ${fmt(r.value,1)}`).join(" · ")} µg/m³ · à ${fmt(airLiveInRange.d)} m`:"Aucune station Airparif en direct à moins de 8 km",why:airLiveInRange?`La station la plus proche mesure ${fmt(airLiveInRange.worst*100)} % du seuil OMS 24 h le plus dépassé ; la note décroît avec la distance (${fmt(airLiveDecay*100)} % conservés à ${fmt(airLiveInRange.d)} m, sur un rayon de représentativité de 8 km).`:"Le Val-d’Oise ne compte que 2 à 3 stations Airparif en mesure directe ; hors de leur voisinage, aucune lecture en direct n’est disponible ici — voir la coexposition Airparif/Bruitparif 2024 ci-dessus pour le contexte structurel.",detail:"Note = min(5, ratio au seuil OMS 24 h × 2,5) × décroissance linéaire jusqu’à 8 km · pas l’indice ATMO officiel",source:`LCSQA/INERIS · réseau Airparif · data.gouv.fr, moyennes horaires`}
   ];
   const global=globalStress(rows.map(r=>r.contribution??r.score)),stress={generatedAt:new Date().toISOString(),coordinates:{lat,lon},nearestAddress:ban?.label||null,commune:air?.nom||ban?.city||null,score:global,criteria:rows};state.currentStress=stress;
   const cards=rows.map(stressCard).join("");
@@ -745,6 +750,61 @@ async function loadAircraft() {
 }
 loadAircraft();
 setInterval(loadAircraft, 60000);
+function incidentColor(mag){return mag>=4?"#a50026":mag>=3?"#e05b31":mag>=2?"#f5a623":mag>=1?"#ffd35c":"#8a97a8"}
+async function loadIncidents(){
+  try{
+    const d=await fetch(`data/traffic-incidents.json?v=${Date.now()}`,{cache:"no-store"}).then(r=>r.json());
+    const list=d.incidents||[];
+    incidentsLayer.clearLayers();pressureExtra.incidents=[];
+    list.forEach(f=>{
+      if(!f.geometry)return;
+      const p=f.properties||{},mag=Number(p.magnitudeOfDelay)||0,color=incidentColor(mag),event=(p.events||[])[0];
+      const layer=L.geoJSON(f,{pane:"traffic",style:{color,weight:5,opacity:.85}}).addTo(incidentsLayer);
+      const label=event?.description||"Incident routier";
+      layer.bindTooltip(`<strong>${esc(label)}</strong><br>${esc(p.from||"")}${p.to?" → "+esc(p.to):""}`,{sticky:true});
+      layer.on("click",e=>{L.DomEvent.stopPropagation(e);openDetail(`<span class="detail-tag">INCIDENT ROUTIER · TOMTOM</span><h2>${esc(label)}</h2><div class="kpi-grid"><div class="kpi-tile warn"><small>Tronçon</small><strong>${esc(p.from||"—")}</strong><em>${p.to?"→ "+esc(p.to):""}</em></div><div class="kpi-tile"><small>Axe</small><strong>${esc((p.roadNumbers||[]).join(", ")||"—")}</strong></div></div><p class="flag-note">Signalé depuis le ${p.startTime?new Date(p.startTime).toLocaleString("fr-FR"):"—"}. Position TomTom en direct, mise à jour toutes les 5 minutes.</p>`);});
+      const coords=f.geometry.type==="LineString"?f.geometry.coordinates[Math.floor(f.geometry.coordinates.length/2)]:f.geometry.coordinates;
+      if(coords)pressureExtra.incidents.push({lon:coords[0],lat:coords[1],mag});
+    });
+    $("incidentsStatus").textContent=list.length?`${list.length} incident(s) signalé(s) · TomTom`:"Aucun incident signalé · TomTom";
+  }catch{$("incidentsStatus").textContent="Clé TomTom non configurée ou flux indisponible"}
+}
+const incidentsLayer=state.layers.incidents;
+loadIncidents();
+setInterval(loadIncidents,300000);
+let disruptionsData={count:0,messages:[]};
+async function loadDisruptions(){
+  try{
+    disruptionsData=await fetch(`data/idfm-disruptions.json?v=${Date.now()}`,{cache:"no-store"}).then(r=>r.json());
+    $("disruptionsStatus").textContent=disruptionsData.count?`${disruptionsData.count} perturbation(s) en cours · IDFM`:"Aucune perturbation signalée · IDFM";
+  }catch{$("disruptionsStatus").textContent="Clé PRIM non configurée ou flux indisponible"}
+}
+loadDisruptions();
+setInterval(loadDisruptions,300000);
+function openDisruptions(){
+  const rows=(disruptionsData.messages||[]).map(m=>`<div class="kpi-tile warn" style="margin-bottom:8px"><small>${esc((m.lines||[]).join(", ")||"Réseau IDFM")}</small><strong style="font-size:12px">${esc(m.text)}</strong></div>`).join("")||"<p>Aucune perturbation en cours sur les lignes suivies.</p>";
+  openDetail(`<span class="detail-tag">PERTURBATIONS · IDFM PRIM</span><h2>Réseau IDFM maintenant</h2><p class="flag-note">Le flux SIRI Lite ne porte pas de géométrie : ces messages ne peuvent pas être localisés sur la carte et n'entrent pas dans le score de stress local. Ils décrivent l'état du réseau à l'instant, pas ce point précis.</p><div class="stress-grid">${rows}</div>`);
+}
+function airColor(ratio){return ratio==null?"#8a97a8":ratio>=2?"#a50026":ratio>=1.5?"#e05b31":ratio>=1?"#f5a623":ratio>=.5?"#ffd35c":"#57abd2"}
+async function loadAirLive(){
+  try{
+    const d=await fetch(`data/air-live.json?v=${Date.now()}`,{cache:"no-store"}).then(r=>r.json());
+    airLiveLayer.clearLayers();pressureExtra.airLive=[];
+    (d.stations||[]).forEach(s=>{
+      const readings=Object.entries(s.readings||{}),ratios=readings.map(([k,r])=>r.whoGuideline24h?r.value/r.whoGuideline24h:null).filter(Number.isFinite),worst=ratios.length?Math.max(...ratios):null;
+      const marker=L.circleMarker([s.lat,s.lon],{pane:"pulse",radius:9,color:"#fff",weight:2,fillColor:airColor(worst),fillOpacity:.9}).addTo(airLiveLayer);
+      const rows=readings.map(([k,r])=>`<div class="kpi-tile${r.whoGuideline24h&&r.value>r.whoGuideline24h?" warn":""}"><small>${esc(k)}</small><strong>${fmt(r.value,1)} µg/m³</strong><em>${r.whoGuideline24h?`seuil OMS 24h ${r.whoGuideline24h}`:"—"}</em></div>`).join("");
+      const detail=`<span class="detail-tag">QUALITÉ DE L'AIR EN DIRECT · STATION AIRPARIF</span><h2>${esc(s.name)}</h2><div class="kpi-grid">${rows}</div><p class="flag-note">Concentrations horaires mesurées brutes (LCSQA/INERIS, réseau Airparif) — ce n'est pas l'indice ATMO officiel, calculé quotidiennement par commune à partir d'une modélisation. Voir <a href="https://www.airparif.fr" target="_blank">airparif.fr</a> pour l'indice réglementaire.</p>`;
+      marker.bindTooltip(`<strong>${esc(s.name)}</strong><br>${readings.map(([k,r])=>`${esc(k)} ${fmt(r.value,1)}`).join(" · ")}`,{sticky:true});
+      marker.on("click",e=>{L.DomEvent.stopPropagation(e);openDetail(detail)});
+      pressureExtra.airLive.push({lat:s.lat,lon:s.lon,name:s.name,worst,readings:s.readings});
+    });
+    $("airLiveStatus").textContent=d.stations?.length?`${d.stations.length} station(s) Airparif · maj horaire`:"Flux air en direct indisponible";
+  }catch{$("airLiveStatus").textContent="Flux air en direct indisponible"}
+}
+const airLiveLayer=state.layers.airLive;
+loadAirLive();
+setInterval(loadAirLive,600000);
 const pressureData={stations:[],stops:[],equipment:[],heat:[],temperaturePoints:[]};
 function pressureColor(v,max){const r=v/(max||1);return r>.75?"#a90028":r>.5?"#ef6c35":r>.25?"#f2c94c":"#2fb9b3"}
 function equipmentInfluenceLayer(records,centres){
@@ -798,6 +858,7 @@ function toggle(name, on) {
 document.querySelectorAll(".layer-card").forEach(
   (b) =>
     (b.onclick = () => {
+      if (b.dataset.action === "disruptions") { openDisruptions(); return; }
       b.classList.toggle("active");
       toggle(b.dataset.layer, b.classList.contains("active"));
     }),
@@ -836,6 +897,10 @@ function updateLegend() {
     parts.push('<span><i class="rail-line"></i>Voies ferrées</span>');
   if (state.active.has("aircraft"))
     parts.push('<span><i class="plane-dot"></i>Avions maintenant</span>');
+  if (state.active.has("incidents"))
+    parts.push('<span><i class="road-line" style="background:#e05b31"></i>Incidents routiers · TomTom</span>');
+  if (state.active.has("airLive"))
+    parts.push('<span><i class="plane-dot" style="background:#7356a8"></i>Qualité de l’air en direct · Airparif</span>');
   $("legendContent").innerHTML =
     parts.join("") || "<small>Aucune couche active</small>";
 }

@@ -1,0 +1,8 @@
+{
+  "source": "LCSQA/INERIS · métadonnées stations, réseau AIRPARIF · export du 25/08/2026",
+  "stations": [
+    { "code": "FR04023", "name": "Cergy-Pontoise", "lat": 49.04639, "lon": 2.043056 },
+    { "code": "FR04024", "name": "Gonesse", "lat": 48.99083, "lon": 2.444722 },
+    { "code": "FR04051", "name": "Argenteuil", "lat": 48.95139, "lon": 2.223611 }
+  ]
+}

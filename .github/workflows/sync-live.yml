@@ -33,11 +33,41 @@ jobs:
           done < <(jq -r '.tiles[] | [.x,.y] | @tsv' data/sytadin-tiles.json)
       - name: Récupérer les avions
         run: curl --fail --silent --show-error --retry 3 https://api.adsb.lol/v2/lat/49.08/lon/2.10/dist/45 -o data/aircraft-live.json
+      - name: Récupérer les incidents routiers TomTom
+        env:
+          KEY: ${{ secrets.TOMTOM_API_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "TOMTOM_API_KEY absent : couche incidents ignorée"
+            exit 0
+          fi
+          fields='%7Bincidents%7Btype%2Cgeometry%7Btype%2Ccoordinates%7D%2Cproperties%7BiconCategory%2CmagnitudeOfDelay%2Cevents%7Bdescription%2Ccode%7D%2Cfrom%2Cto%2CroadNumbers%2CstartTime%2CendTime%2Clength%2Cdelay%7D%7D%7D'
+          curl --fail --silent --show-error --retry 3 \
+            "https://api.tomtom.com/traffic/services/5/incidentDetails?bbox=1.6,48.89,2.6,49.25&language=fr-FR&timeValidityFilter=present&fields=${fields}&key=${KEY}" \
+            -o data/traffic-incidents.json || echo '{"incidents":[]}' > data/traffic-incidents.json
+      - name: Récupérer les perturbations IDFM (PRIM)
+        env:
+          KEY: ${{ secrets.PRIM_API_KEY }}
+        run: |
+          if [ -z "$KEY" ]; then
+            echo "PRIM_API_KEY absent : perturbations ignorées"
+            exit 0
+          fi
+          if curl --fail --silent --show-error --retry 3 -H "apikey: ${KEY}" \
+            "https://prim.iledefrance-mobilites.fr/marketplace/general-message" \
+            -o /tmp/prim-raw.json; then
+            python3 scripts/build_idfm_disruptions.py /tmp/prim-raw.json data/idfm-disruptions.json
+          else
+            echo '{"generatedAt":null,"count":0,"messages":[]}' > data/idfm-disruptions.json
+          fi
       - name: Publier uniquement en cas de changement
         run: |
-          if git diff --quiet -- data/traffic-sync.json data/traffic data/aircraft-live.json; then exit 0; fi
+          files="data/traffic-sync.json data/traffic data/aircraft-live.json"
+          [ -f data/traffic-incidents.json ] && files="$files data/traffic-incidents.json"
+          [ -f data/idfm-disruptions.json ] && files="$files data/idfm-disruptions.json"
+          if git diff --quiet -- $files; then exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/traffic-sync.json data/traffic data/aircraft-live.json
+          git add $files
           git commit -m "Actualiser les flux en direct"
           git push

@@ -1,0 +1,38 @@
+name: Synchroniser la qualité de l'air
+
+on:
+  schedule:
+    - cron: "10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-air-feed
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Récupérer les mesures horaires nationales (LCSQA/INERIS, data.gouv.fr)
+        run: |
+          today=$(date -u +%Y-%m-%d)
+          year=$(date -u +%Y)
+          url="https://files.data.gouv.fr/ineris/lcsqa/concentrations-de-polluants-atmospheriques-reglementes/temps-reel/${year}/FR_E2_${today}.csv"
+          if curl --fail --silent --show-error --retry 3 --max-time 120 "$url" -o /tmp/air-national.csv; then
+            python3 scripts/build_air_live.py /tmp/air-national.csv data/air-stations.json data/air-live.json
+          else
+            echo "Flux air national indisponible pour ${today} : couche laissée inchangée"
+          fi
+      - name: Publier uniquement en cas de changement
+        run: |
+          [ -f data/air-live.json ] || exit 0
+          if git diff --quiet -- data/air-live.json; then exit 0; fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/air-live.json
+          git commit -m "Actualiser la qualité de l'air"
+          git push

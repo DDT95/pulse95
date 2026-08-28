@@ -79,12 +79,14 @@
               <div class="layer-cards">
                 <button class="layer-card active" data-layer="stations"><i class="layer-swatch stations"></i><span><b>Influence des transports</b><small id="stationStatus">Gares et arrêts IDFM · chargement…</small></span><i class="layer-switch"></i></button>
                 <button class="layer-card" data-layer="traffic"><span class="live-pulse"></span><span><b>Circulation maintenant</b><small id="trafficStatus">Sytadin · chargement…</small></span><i class="layer-switch"></i></button>
+                <button class="layer-card" data-action="disruptions"><span class="live-pulse"></span><span><b>Perturbations transport</b><small id="disruptionsStatus">IDFM PRIM · chargement…</small></span><i class="layer-switch" style="visibility:hidden"></i></button>
               </div>
             </div>
             <div class="layer-group">
               <span>ENVIRONNEMENT & SOLS</span>
               <div class="layer-cards">
                 <button class="layer-card" data-layer="airNoise"><i class="layer-swatch air"></i><span><b>Qualité air-bruit</b><small>Coexposition Airparif · Bruitparif 2024</small></span><i class="layer-switch"></i></button>
+                <button class="layer-card" data-layer="airLive"><span class="live-pulse air-dot"></span><span><b>Qualité de l’air en direct</b><small id="airLiveStatus">Airparif · chargement…</small></span><i class="layer-switch"></i></button>
                 <button class="layer-card" data-layer="heat"><i class="layer-swatch heat"></i><span><b>Chaleur urbaine</b><small>Îlots morphoclimatiques · IPR</small></span><i class="layer-switch"></i></button>
                 <button class="layer-card" data-layer="artificial"><i class="layer-swatch artificial"></i><span><b>Sols artificialisés</b><small>OCS GE · IGN</small></span><i class="layer-switch"></i></button>
               </div>
@@ -169,6 +171,15 @@
                     ></span
                   ><i class="layer-switch"></i>
                 </button>
+                <button class="layer-card" data-layer="incidents">
+                  <span class="live-pulse" style="background:#e05b31;box-shadow:0 0 0 5px #fbe0d6"></span
+                  ><span
+                    ><b>Incidents routiers</b
+                    ><small id="incidentsStatus"
+                      >TomTom · chargement…</small
+                    ></span
+                  ><i class="layer-switch"></i>
+                </button>
               </div>
             </div>
           </section>
@@ -176,12 +187,12 @@
         <button id="openMethod" class="sources-inline">
           Sources, millésimes et limites
         </button>
-        <a class="science-link" href="methodologie.html" target="_blank">Méthode scientifique ↗</a>
+        <a class="science-link" href="methodologie.html" target="_blank">Méthode ↗</a>
         <div class="sidebar-footer">
           <span class="fresh-dot"></span>
           <div>
             <strong>Données publiques vérifiées</strong
-            ><small>IDFM · IGN · IPR · Bruitparif · Airparif · Sytadin · ADSB.lol</small>
+            ><small>IDFM · IGN · IPR · Bruitparif · Airparif · LCSQA/INERIS · Sytadin · TomTom · ADSB.lol</small>
           </div>
         </div>
       </aside>
@@ -274,7 +285,36 @@
           Sytadin est le service de la DiRIF pour les grands axes franciliens.
           Ses états fluide, ralenti et saturé sont affichés sur la carte et le
           millésime courant est synchronisé automatiquement toutes les cinq
-          minutes.
+          minutes. Sytadin est la seule diffusion publique de la DiRIF pour
+          l’Île-de-France : il n’existe pas de second flux DiRIF distinct à
+          consulter en complément.
+        </p>
+        <h3>Incidents routiers en direct</h3>
+        <p>
+          Accidents, fermetures et travaux signalés par TomTom (API Traffic
+          Incidents), synchronisés toutes les cinq minutes lorsque la clé du
+          dépôt est configurée. Chaque incident affiche le tronçon concerné,
+          sa description et son horodatage ; un incident à moins de 400 m
+          d’un point cliqué peut fixer la note de pression routière.
+        </p>
+        <h3>Perturbations du réseau IDFM</h3>
+        <p>
+          Messages d’exploitation en direct (SIRI Lite, plateforme PRIM
+          d’Île-de-France Mobilités), synchronisés toutes les cinq minutes
+          lorsque la clé du dépôt est configurée. Ce flux ne porte aucune
+          géométrie : les messages sont donc listés pour le réseau dans son
+          ensemble et n’entrent pas dans le diagnostic d’un point précis.
+        </p>
+        <h3>Qualité de l’air en direct</h3>
+        <p>
+          Concentrations horaires mesurées par les 2 à 3 stations Airparif du
+          Val-d’Oise (Cergy-Pontoise, Gonesse, Argenteuil selon les
+          polluants), publiées en accès libre par le LCSQA/INERIS sur
+          data.gouv.fr et resynchronisées chaque heure. Ce n’est pas l’indice
+          ATMO officiel — celui-ci est calculé quotidiennement à l’échelle
+          communale à partir d’une modélisation, publié par Airparif. La
+          carte situe chaque mesure par rapport aux valeurs guides 24 h de
+          l’OMS (2021) pour les PM2.5, PM10 et NO2.
         </p>
         <h3>Influence des équipements et services</h3>
         <p>
@@ -296,6 +336,17 @@
           pôle d’influence et non un simple point. Le recouvrement des halos fait
           apparaître les secteurs de forte interconnexion.
         </p>
+        <h3>Bruit mesuré (routier, ferroviaire, survols) — non disponible en direct</h3>
+        <p>
+          Bruitparif diffuse des mesures de bruit en direct (réseau RUMEUR) et
+          des survols mesurés au sol autour de Roissy-Charles de Gaulle
+          (dispositif Survol, avec ADP et l’ACNUSA), mais uniquement via des
+          tableaux de bord de consultation, sans API publique documentée à ce
+          jour. Cette carte ne peut donc pas encore afficher de bruit mesuré
+          en direct ; elle reste sur les cartes stratégiques 2017 et le
+          classement sonore réglementaire ci-dessus. Un accès partenaire
+          demandé directement à Bruitparif/ADP pourrait lever cette limite.
+        </p>
         <div class="source-cards">
           <div>
             <h3>Données détaillées</h3>
@@ -310,7 +361,7 @@
             >
           </div>
           <div>
-            <h3>Notions scientifiques</h3>
+            <h3>Notions et méthode</h3>
             <a href="methodologie.html" target="_blank">Lire la documentation ↗</a>
           </div>
         </div>
@@ -323,6 +374,6 @@
     ></script>
     <script src="vendor/jspdf.umd.min.js"></script>
     <script src="vendor/jspdf.plugin.autotable.min.js"></script>
-    <script src="js/app.js?v=27"></script>
+    <script src="js/app.js?v=28"></script>
   </body>
 </html>
