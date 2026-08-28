@@ -45,6 +45,15 @@ The diagnostic drawer was inspected at readable scale. The commune, BAN address,
 
 final result: passed
 
+## Artificialisation display/contribution separation — 28 August 2026
+
+- Corrected a semantic display error: the card now shows the observed land-cover score (`share × 5`) rather than the dampened global contribution.
+- At the Cergy validation point, 97% built/mineral is displayed as 4.9/5; the separate badge states “Contribution au cumul 1.9/5”.
+- The global score still uses the 1.9/5 contribution, preserving the approved secondary weighting.
+- Runtime browser check: raw score 4.8731, contribution 1.8998, global score 3.8608; all three values are distinct and consistent.
+
+final result: passed
+
 ## Dataviz and wide diagnostic panel — 28 August 2026
 
 - Departmental view rebuilt as a compact dashboard: station-activity ring, road-data freshness signal, aircraft scale, temperature comfort scale, noise donut and ranked exposure bars.
