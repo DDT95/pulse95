@@ -8,6 +8,7 @@ Carte publique des pressions territoriales du Val-d’Oise. Les couches sont ind
 - incidents routiers en direct (TomTom Traffic Incidents) ;
 - perturbations du réseau IDFM en direct (PRIM, SIRI Lite) ;
 - qualité de l’air en direct (LCSQA/INERIS, réseau Airparif, sans clé) ;
+- accidents corporels géolocalisés (ONISR, BAAC, millésime annuel) ;
 - cartes de bruit Bruitparif et classement sonore réglementaire ;
 - coexposition air-bruit Airparif / Bruitparif ;
 - chaleur urbaine de L’Institut Paris Region et température Open-Meteo ;
