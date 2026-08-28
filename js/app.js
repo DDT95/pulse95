@@ -139,8 +139,7 @@ state.layers.temperature=L.layerGroup();
 state.layers.heat=L.layerGroup();
 state.layers.incidents=L.layerGroup();
 state.layers.airLive=L.layerGroup();
-state.layers.accidents=L.layerGroup();
-const pressureExtra={incidents:[],airLive:[],accidents:[]};
+const pressureExtra={incidents:[],airLive:[]};
 state.layers.roadNoise = roadNoise;
 state.layers.railNoise = railNoise;
 roadNoise.addTo(map);
@@ -559,7 +558,6 @@ async function showNuisancesAt(lon, lat) {
   const airScore=localAirNoise,heatFeature=featureAtPoint(lon,lat,pressureData.heat),heatDay=heatFeature?Number(heatFeature.properties.day)+1:null,temp=(pressureData.temperaturePoints||[]).map(p=>({...p,d:distanceMeters(lon,lat,p.lon,p.lat)})).sort((a,b)=>a.d-b.d)[0],weather=weatherStress(temp),heatExtreme=Math.max(Number(temp?.temperature),Number(temp?.apparent))>=27,climateScore=weather.score==null&&heatDay==null?null:Math.max(weather.score||0,heatExtreme?Math.min(5,heatDay||0):0);
   const aircraftNear=movingAircraft.map(a=>{const p=a.marker.getLatLng();return distanceMeters(lon,lat,p.lng,p.lat)}).filter(d=>d<=5000),aircraftScore=Math.min(5,aircraftNear.length),artificialScore=artificial==null?null:Math.min(2,2*artificial.share**2);
   const AIR_LIVE_RADIUS=8000,nearestAirLive=pressureExtra.airLive.map(s=>({...s,d:distanceMeters(lon,lat,s.lon,s.lat)})).sort((a,b)=>a.d-b.d)[0],airLiveInRange=nearestAirLive&&nearestAirLive.d<=AIR_LIVE_RADIUS?nearestAirLive:null,airLiveDecay=airLiveInRange?Math.max(0,1-airLiveInRange.d/AIR_LIVE_RADIUS):0,airLiveScore=airLiveInRange&&airLiveInRange.worst!=null?Math.min(5,airLiveInRange.worst*2.5)*airLiveDecay:null;
-  const ACCIDENT_RADIUS=300,accidentWeight=s=>s===2?3:s===3?2:1,accidentHits=pressureExtra.accidents.map(a=>({...a,d:distanceMeters(lon,lat,a.lon,a.lat)})).filter(a=>a.d<=ACCIDENT_RADIUS).sort((a,b)=>b.severity===a.severity?a.d-b.d:a.severity-b.severity),accidentMass=accidentHits.reduce((n,a)=>n+accidentWeight(a.severity)*Math.max(0,1-a.d/ACCIDENT_RADIUS),0),accidentScore=Math.min(5,accidentMass*1.2);
   const rows=[
     {name:"Mobilité & fréquentation",score:mobility5,value:stationHits[0]?`${stationHits[0].name} · ${fmt(stationHits[0].hourValue)} validations entre ${currentHour} h et ${currentHour+1} h · à ${fmt(stationHits[0].d)} m`:`${busHits.length} arrêt(s) à moins de 300 m`,why:stationHits[0]?`La gare atteint ${fmt((stationHits[0].hourValue/hourlyMax)*100)} % du maximum départemental à cette heure, puis son influence décroît avec la distance (${fmt(stationHits[0].distanceFactor*100)} % conservés ici).`:"Aucune gare n’exerce d’influence sur ce point ; seuls les arrêts proches contribuent.",detail:`Décroissance continue du centre jusqu’à 0 au bord du rayon · ${busHits.length} arrêt(s) proches`,source:"IDFM · profil horaire du jour ouvré moyen · heure actuelle"},
     {name:"Équipements & services",score:equipmentScore,value:`${equipmentHits.length} lieux à moins de 750 m · masse pondérée ${fmt(equipmentMass,1)}`,why:`Les ${equipmentHits.length} lieux ne comptent pas tous entièrement : chacun perd progressivement son influence avec la distance. La masse équivalente au point est ${fmt(equipmentMass,1)}.`,detail:"Décroissance linéaire jusqu’à 750 m puis progression logarithmique",source:"BPE Insee + OpenStreetMap · millésimes publiés"},
@@ -569,8 +567,7 @@ async function showNuisancesAt(lon, lat) {
     {name:"Météo & extrêmes",score:climateScore,value:temp?`${fmt(temp.temperature,1)} °C · ressenti ${fmt(temp.apparent,1)} °C · ${weather.detail}`:"Observation indisponible",why:climateScore?`Un phénomène actuel ou une température extrême active la pression météo ; l’aléa morphoclimatique renforce uniquement les épisodes chauds.`:"Les températures sont dans la plage ordinaire et aucun phénomène météo notable n’ajoute de stress.",detail:heatExtreme&&heatDay?`Extrême thermique : aléa morphoclimatique ${heatDay}/5 intégré`:"Température ordinaire : aucun stress thermique ajouté",source:`Open-Meteo · observation ${temp?.time||"actuelle"} · IPR`},
     {name:"Artificialisation",score:artificial==null?null:Math.min(5,artificial.share*5),contribution:artificialScore,value:artificial==null?"Lecture indisponible":`${fmt(artificial.share*100)} % de sols bâtis ou minéraux autour du point`,why:artificial?`La note affichée traduit directement la part bâtie ou minérale observée dans le disque de 200 m. Pour le cumul territorial, sa contribution reste secondaire : 2 × part², avec un maximum de 2/5. Les jardins, pelouses, boisements et autres couvertures végétales restent non minéralisés. Au point exact, la couverture est ${artificial.atPoint?"bâtie ou minérale":"végétalisée ou naturelle"}.`:"Lecture locale indisponible.",detail:"Note observée = part × 5 · contribution au cumul = 2 × part² · plafond 2/5",source:"OCS GE IGN · couverture du sol 2024-2026 · disque de 200 m"},
     {name:"Trafic aérien",score:aircraftScore,value:`${aircraftNear.length} aéronef(s) à moins de 5 km`,why:aircraftNear.length?`${aircraftNear.length} aéronef(s) sont actuellement observés dans le voisinage du point ; la pression augmente avec leur nombre.`:"Aucun aéronef n’est actuellement observé dans un rayon de 5 km.",detail:"1 niveau de stress par aéronef proche, plafonné à 5",source:`ADSB.lol · positions en direct · ${new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}`},
-    {name:"Qualité de l’air en direct",score:airLiveScore,value:airLiveInRange?`${esc(airLiveInRange.name)} · ${Object.entries(airLiveInRange.readings).map(([k,r])=>`${k} ${fmt(r.value,1)}`).join(" · ")} µg/m³ · à ${fmt(airLiveInRange.d)} m`:"Aucune station Airparif en direct à moins de 8 km",why:airLiveInRange?`La station la plus proche mesure ${fmt(airLiveInRange.worst*100)} % du seuil OMS 24 h le plus dépassé ; la note décroît avec la distance (${fmt(airLiveDecay*100)} % conservés à ${fmt(airLiveInRange.d)} m, sur un rayon de représentativité de 8 km).`:"Le Val-d’Oise ne compte que 2 à 3 stations Airparif en mesure directe ; hors de leur voisinage, aucune lecture en direct n’est disponible ici — voir la coexposition Airparif/Bruitparif 2024 ci-dessus pour le contexte structurel.",detail:"Note = min(5, ratio au seuil OMS 24 h × 2,5) × décroissance linéaire jusqu’à 8 km · pas l’indice ATMO officiel",source:`LCSQA/INERIS · réseau Airparif · data.gouv.fr, moyennes horaires`},
-    {name:"Accidentologie",score:accidentScore,value:accidentHits.length?`${accidentHits.length} accident(s) corporel(s) à moins de ${ACCIDENT_RADIUS} m · le plus proche : ${esc(accidentHits[0].severity===2?"tué":accidentHits[0].severity===3?"hospitalisé":"blessé léger")} à ${fmt(accidentHits[0].d)} m`:`Aucun accident corporel à moins de ${ACCIDENT_RADIUS} m en 2024`,why:accidentHits.length?`Chaque accident pèse selon sa gravité (tué ×3, hospitalisé ×2, blessé léger ×1) et décroît linéairement jusqu’à ${ACCIDENT_RADIUS} m ; la masse obtenue fixe la note.`:"Aucun accident corporel n’a été enregistré à proximité immédiate sur le dernier millésime disponible.",detail:"Note = min(5, masse pondérée par gravité × 1,2) · millésime annuel, pas un flux en direct",source:"ONISR · BAAC 2024 · data.gouv.fr"}
+    {name:"Qualité de l’air en direct",score:airLiveScore,value:airLiveInRange?`${esc(airLiveInRange.name)} · ${Object.entries(airLiveInRange.readings).map(([k,r])=>`${k} ${fmt(r.value,1)}`).join(" · ")} µg/m³ · à ${fmt(airLiveInRange.d)} m`:"Aucune station Airparif en direct à moins de 8 km",why:airLiveInRange?`La station la plus proche mesure ${fmt(airLiveInRange.worst*100)} % du seuil OMS 24 h le plus dépassé ; la note décroît avec la distance (${fmt(airLiveDecay*100)} % conservés à ${fmt(airLiveInRange.d)} m, sur un rayon de représentativité de 8 km).`:"Le Val-d’Oise ne compte que 2 à 3 stations Airparif en mesure directe ; hors de leur voisinage, aucune lecture en direct n’est disponible ici — voir la coexposition Airparif/Bruitparif 2024 ci-dessus pour le contexte structurel.",detail:"Note = min(5, ratio au seuil OMS 24 h × 2,5) × décroissance linéaire jusqu’à 8 km · pas l’indice ATMO officiel",source:`LCSQA/INERIS · réseau Airparif · data.gouv.fr, moyennes horaires`}
   ];
   const global=globalStress(rows.map(r=>r.contribution??r.score)),stress={generatedAt:new Date().toISOString(),coordinates:{lat,lon},nearestAddress:ban?.label||null,commune:air?.nom||ban?.city||null,score:global,criteria:rows};state.currentStress=stress;
   const cards=rows.map(stressCard).join("");
@@ -808,23 +805,6 @@ async function loadAirLive(){
 const airLiveLayer=state.layers.airLive;
 loadAirLive();
 setInterval(loadAirLive,600000);
-function accidentColor(s){return s===2?"#a50026":s===3?"#e05b31":"#f5a623"}
-async function loadAccidents(){
-  try{
-    const d=await fetch("data/accidents.json").then(r=>r.json());
-    accidentsLayer.clearLayers();pressureExtra.accidents=[];
-    (d.features||[]).forEach(f=>{
-      const p=f.properties,[lon,lat]=f.geometry.coordinates,color=accidentColor(p.worstSeverity);
-      const marker=L.circleMarker([lat,lon],{pane:"pulse",radius:5,color:"#fff",weight:1,fillColor:color,fillOpacity:.85}).addTo(accidentsLayer);
-      marker.bindTooltip(`<strong>${esc(p.road||"Voie non précisée")}</strong><br>${esc(p.date)} · ${esc(p.worstLabel)}`,{sticky:true});
-      marker.on("click",e=>{L.DomEvent.stopPropagation(e);openDetail(`<span class="detail-tag">ACCIDENT CORPOREL · BAAC ${esc(d.year)}</span><h2>${esc(p.road||"Voie non précisée")}</h2><div class="kpi-grid"><div class="kpi-tile warn"><small>Date</small><strong>${esc(p.date)}</strong><em>${esc(p.time||"")}</em></div><div class="kpi-tile"><small>Bilan</small><strong>${esc(p.worstLabel)}</strong><em>${p.killed?fmt(p.killed)+" tué(s) · ":""}${p.hospitalized?fmt(p.hospitalized)+" hospitalisé(s) · ":""}${p.light?fmt(p.light)+" blessé(s) léger(s)":""}</em></div></div><p class="flag-note">Millésime ${esc(d.year)}, publié par l'ONISR (BAAC) : donnée annuelle, pas un flux en direct.</p>`);});
-      pressureExtra.accidents.push({lat,lon,severity:p.worstSeverity});
-    });
-    $("accidentsStatus").textContent=`${d.count} accident(s) corporel(s) · BAAC ${d.year}`;
-  }catch{$("accidentsStatus").textContent="Flux accidentologie indisponible"}
-}
-const accidentsLayer=state.layers.accidents;
-loadAccidents();
 const pressureData={stations:[],stops:[],equipment:[],heat:[],temperaturePoints:[]};
 function pressureColor(v,max){const r=v/(max||1);return r>.75?"#a90028":r>.5?"#ef6c35":r>.25?"#f2c94c":"#2fb9b3"}
 function equipmentInfluenceLayer(records,centres){
@@ -921,8 +901,6 @@ function updateLegend() {
     parts.push('<span><i class="road-line" style="background:#e05b31"></i>Incidents routiers · TomTom</span>');
   if (state.active.has("airLive"))
     parts.push('<span><i class="plane-dot" style="background:#7356a8"></i>Qualité de l’air en direct · Airparif</span>');
-  if (state.active.has("accidents"))
-    parts.push('<span><i class="plane-dot" style="background:#e05b31"></i>Accidents corporels · BAAC</span>');
   $("legendContent").innerHTML =
     parts.join("") || "<small>Aucune couche active</small>";
 }

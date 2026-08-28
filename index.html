@@ -159,20 +159,6 @@
                 </button>
               </div>
             </div>
-            <div class="layer-group">
-              <span>SÉCURITÉ ROUTIÈRE</span>
-              <div class="layer-cards">
-                <button class="layer-card" data-layer="accidents">
-                  <i class="layer-swatch" style="background:linear-gradient(135deg,#ffe1d6,#e05b31,#a50026)"></i
-                  ><span
-                    ><b>Accidents corporels</b
-                    ><small id="accidentsStatus"
-                      >BAAC · chargement…</small
-                    ></span
-                  ><i class="layer-switch"></i>
-                </button>
-              </div>
-            </div>
             <div class="layer-group live-group">
               <span>EN DIRECT</span>
               <div class="layer-cards">
@@ -206,7 +192,7 @@
           <span class="fresh-dot"></span>
           <div>
             <strong>Données publiques vérifiées</strong
-            ><small>IDFM · IGN · IPR · Bruitparif · Airparif · LCSQA/INERIS · ONISR · Sytadin · TomTom · ADSB.lol</small>
+            ><small>IDFM · IGN · IPR · Bruitparif · Airparif · LCSQA/INERIS · Sytadin · TomTom · ADSB.lol</small>
           </div>
         </div>
       </aside>
@@ -350,16 +336,6 @@
           pôle d’influence et non un simple point. Le recouvrement des halos fait
           apparaître les secteurs de forte interconnexion.
         </p>
-        <h3>Accidentologie routière</h3>
-        <p>
-          Accidents corporels géolocalisés du Val-d’Oise, bulletins d’analyse
-          des accidents corporels (BAAC) de l’ONISR, publiés en accès libre
-          sur data.gouv.fr — millésime 2024 (943 accidents, 30 tués,
-          186 hospitalisés), le plus récent disponible. C’est un millésime
-          annuel publié avec plusieurs mois de retard, pas un flux en
-          direct : à mettre à jour manuellement (<code>scripts/build_accidents.py</code>)
-          lorsque l’ONISR publie l’année suivante.
-        </p>
         <h3>Bruit mesuré (routier, ferroviaire, survols) — non disponible en direct</h3>
         <p>
           Bruitparif diffuse des mesures de bruit en direct (réseau RUMEUR) et
@@ -398,6 +374,6 @@
     ></script>
     <script src="vendor/jspdf.umd.min.js"></script>
     <script src="vendor/jspdf.plugin.autotable.min.js"></script>
-    <script src="js/app.js?v=29"></script>
+    <script src="js/app.js?v=28"></script>
   </body>
 </html>
