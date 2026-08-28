@@ -5,6 +5,12 @@
 .temperature{background:linear-gradient(135deg,#2b83ba,#fee08b,#d7191c)}
 .leaflet-noise-pane,.leaflet-heatPane-pane,.leaflet-airPane-pane{mix-blend-mode:multiply}
 .leaflet-pulse-pane{mix-blend-mode:multiply}
+.leaflet-traffic-pane{filter:saturate(.72) contrast(.9);mix-blend-mode:multiply}
 .equipment-marker{display:grid;place-items:center;width:25px;height:25px;border-radius:8px;background:#fff;color:#18753c;font-size:14px;font-weight:900;box-shadow:0 3px 10px #0003}
 .temp-marker{padding:6px 8px;border-radius:99px;background:#fff;color:#9b1c1c;font-size:11px;font-weight:900;box-shadow:0 3px 12px #0003;white-space:nowrap}
 .station-pressure{filter:drop-shadow(0 0 7px currentColor)}
+.science-link{display:block;flex:none;margin:7px 14px 4px;padding:10px;border-radius:10px;background:#000091;color:#fff;font-size:10px;font-weight:800;text-align:center;text-decoration:none}
+.layers-scroll{overscroll-behavior:contain;scrollbar-gutter:stable}
+.layers-scroll::-webkit-scrollbar{width:12px}
+.layers-scroll::-webkit-scrollbar-track{background:#eef1f4;border-radius:99px}
+.layers-scroll::-webkit-scrollbar-thumb{background:#6a6af4;border:3px solid #eef1f4;border-radius:99px}
