@@ -44,3 +44,13 @@ The diagnostic drawer was inspected at readable scale. The commune, BAN address,
 - P3: add an official Météo-France vigilance feed when a stable public endpoint is wired; current weather observations already affect the score.
 
 final result: passed
+
+## OCS GE land-cover correction — 28 August 2026
+
+- P1 corrected: the former sampler inferred artificialisation from the red/green rendering of the IGN artificialisation tile. This could classify an entire residential parcel, including its garden, as artificialised and produced 4.9/5 in a rural subdivision.
+- The diagnostic now samples the public IGN OCS GE 2024–2026 **land-cover** layer in a 200 m disc and counts only built, non-built mineral and mineral-material classes. Grass, trees, shrubs, crops and other vegetation remain non-mineralised.
+- Coordinate check at 49.150248, 1.806964 (Magny-en-Vexin capture): 34.5% built/mineral, 1.7/5, versus the erroneous 98%, 4.9/5.
+- Contrast check at 49.036439, 2.080070 (Cergy-Préfecture hard-surfaced forecourt): 96.4% built/mineral, 4.8/5.
+- JavaScript syntax and diff whitespace checks pass.
+
+final result: passed
