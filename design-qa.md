@@ -45,6 +45,16 @@ The diagnostic drawer was inspected at readable scale. The commune, BAN address,
 
 final result: passed
 
+## Soil contribution calibration — 28 August 2026
+
+- The raw OCS GE built/mineral share remains visible and unchanged.
+- Its contribution is now `2 × share²`, capped at 2/5, so land cover acts as a contextual aggravator rather than a dominant stress source.
+- Calibration checks: 20% → 0.08/5; 50% → 0.50/5; 75% → 1.13/5; 96% → 1.84/5; 100% → 2/5.
+- The Magny-en-Vexin validation point (34.5% built/mineral) contributes 0.24/5; the Cergy hard-surfaced forecourt (96.4%) contributes 1.86/5.
+- The drawer, PDF and scientific-method page all use and disclose the same formula.
+
+final result: passed
+
 ## OCS GE land-cover correction — 28 August 2026
 
 - P1 corrected: the former sampler inferred artificialisation from the red/green rendering of the IGN artificialisation tile. This could classify an entire residential parcel, including its garden, as artificialised and produced 4.9/5 in a rural subdivision.
