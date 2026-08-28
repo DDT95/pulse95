@@ -53,7 +53,7 @@ stations=[]
 for z,line in zip(zones,converted):
     sid=str(z["zdcid"])
     if sid not in averages: continue
-    lon,lat,*_=line.split()
+    lat,lon,*_=line.split()
     values={str(h):round(averages[sid]*hour_pct[sid].get(h,0)/100) for h in range(6,24)}
     stations.append({"id":sid,"name":names.get(sid,z["zdaname"]),"town":z["zdatown"],"lat":float(lat),"lon":float(lon),"weekdayAverage":averages[sid],"hourly":values})
 

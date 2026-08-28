@@ -1,4 +1,4 @@
-const map=L.map("map",{zoomControl:false,minZoom:9,maxZoom:15}).fitBounds([[48.89,1.60],[49.25,2.60]]);L.tileLayer("https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png",{subdomains:"abcd",maxZoom:19,attribution:"© OpenStreetMap · © CARTO"}).addTo(map);L.control.zoom({position:"bottomright"}).addTo(map);
+const map=L.map("map",{zoomControl:false,minZoom:9,maxZoom:15}).fitBounds([[48.89,1.60],[49.25,2.60]]);L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(map);L.control.zoom({position:"bottomright"}).addTo(map);
 let data,mode="rail",hour=8,playing=false,timer,stations=[],traffic=[];const railLayer=L.layerGroup().addTo(map),roadLayer=L.layerGroup();
 const fmt=n=>new Intl.NumberFormat("fr-FR").format(n);const colors=v=>v>.75?"#b40025":v>.5?"#ff793e":v>.25?"#ffd35c":"#46c9c5";const period=h=>h<7?"Début de service":h<10?"Pointe du matin":h<16?"Activité de journée":h<20?"Pointe du soir":"Fin de journée";
 fetch("data/idfm-validations.json").then(r=>r.json()).then(json=>{data=json;stations=json.stations;document.getElementById("sourceDate").textContent=`IDFM · ${json.period}`;renderRail();});
