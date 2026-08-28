@@ -1,5 +1,302 @@
-<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="Pulse 95 — affluence réelle des gares et trafic routier observé dans le Val-d’Oise."><title>Pulse 95 · Mobilités du Val-d’Oise</title><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><link rel="stylesheet" href="style.css?v=2"></head><body>
-<header><a class="logo" href="https://ddt95.github.io/atlas-territorial-95/"><img src="prefet-val-doise.svg" alt="Préfet du Val-d’Oise"></a><div class="brand"><small>OBSERVATOIRE DES MOBILITÉS</small><strong>Pulse 95</strong></div><div class="source-state"><i></i><span><b>Données publiques connectées</b><small id="sourceDate">Chargement…</small></span></div><a class="back" href="https://ddt95.github.io/atlas-territorial-95/">← Atlas</a></header>
-<main><aside><p class="eyebrow">VAL-D’OISE · HEURE PAR HEURE</p><h1>Où ça<br><em>bouge&nbsp;?</em></h1><div class="tabs"><button class="active" data-mode="rail">Affluence des gares</button><button data-mode="compare">Matin / soir</button><button data-mode="road">Trafic routier maintenant</button></div><label class="search"><span>Rechercher une gare</span><input id="search" type="search" placeholder="Argenteuil, Cergy, Pontoise…"></label><div class="ranking"><div class="rank-head"><strong id="rankTitle">Gares les plus fréquentées</strong><span id="rankHour">08 h</span></div><div id="ranking"></div></div><div class="numbers"><div><strong id="totalValue">—</strong><span id="totalLabel">validations entre 08 h et 09 h</span></div><div><strong id="placesValue">68</strong><span id="placesLabel">gares observées</span></div></div></aside>
-<section class="map-wrap"><div id="map"></div><div class="map-title"><span id="viewKicker">VALIDATIONS IDFM</span><strong id="clock">08:00</strong></div><div class="legend" id="legend"><span>Moins d’affluence</span><i></i><span>Plus d’affluence</span></div><div class="timeline" id="timeline"><button id="play">▶</button><div><div><strong id="period">Pointe du matin</strong><span id="hourText">08 h — 09 h</span></div><input id="hour" type="range" min="6" max="23" value="8"><div class="ticks"><span>06 h</span><span>09 h</span><span>12 h</span><span>15 h</span><span>18 h</span><span>21 h</span><span>23 h</span></div></div></div><div id="detail" class="detail" hidden><button id="closeDetail">×</button><small id="detailType">GARE</small><h2 id="detailName"></h2><strong id="detailValue"></strong><span id="detailUnit"></span><p id="detailExtra"></p></div></section></main>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script src="https://ddt95.github.io/transport95/live95.js"></script><script src="app.js?v=2"></script></body></html>
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      name="description"
+      content="Pulse 95 superpose les mobilités, nuisances, chaleur, artificialisation et équipements publics du Val-d’Oise."
+    />
+    <title>Pulse 95 · Pressions territoriales du Val-d’Oise · DDT 95</title>
+    <link rel="preconnect" href="https://tile.openstreetmap.org" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      crossorigin=""
+    />
+    <link rel="stylesheet" href="css/style.css?v=3" />
+    <link rel="stylesheet" href="css/pulse.css?v=1" />
+    <link rel="preconnect" href="https://api-adresse.data.gouv.fr" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a
+        class="brand-logo-link"
+        href="https://ddt95.github.io/atlas-territorial-95/#comprendre"
+        ><img
+          class="brand-logo"
+          src="assets/prefet-val-doise.svg"
+          alt="Préfet du Val-d’Oise"
+      /></a>
+      <div class="title-block">
+        <span class="eyebrow">OBSERVATOIRE DES PRESSIONS TERRITORIALES</span>
+        <h1>Pulse 95</h1>
+        <p>
+          Mobilités, bruit, air, chaleur, sols et équipements publics sur une même carte.
+        </p>
+      </div>
+      <button id="mobileLayers" class="mobile-layers">Données</button
+      ><button id="openDataTop" class="livebox">
+        <span class="fresh-dot"></span>
+        <div>
+          <strong>Données & évolutions</strong
+          ><small>Synthèse départementale</small>
+        </div>
+      </button>
+    </header>
+    <main class="workspace">
+      <aside id="layerSidebar" class="sidebar">
+        <div class="sidebar-intro">
+          <span class="eyebrow">PRESSIONS · VAL-D’OISE</span>
+          <h2>Composer la carte</h2>
+          <p>
+            Activez les couches à comparer. Elles se superposent avec des transparences adaptées.
+          </p>
+        </div>
+        <label class="search-box"
+          ><span>Rechercher un territoire</span>
+          <div>
+            <input
+              id="searchInput"
+              type="search"
+              placeholder="Ex. Pontoise"
+            /><button id="searchButton">Rechercher</button>
+          </div></label
+        >
+        <div id="searchResults" class="search-results" hidden></div>
+        <div class="quick-actions">
+          <button id="resetView">Recentrer</button
+          ><button id="openData">Données & évolutions</button>
+        </div>
+        <div class="layers-scroll" aria-label="Couches cartographiques">
+          <section class="layers-panel">
+            <div class="theme-heading">
+              <span>COUCHES ACTIVES</span>
+              <button id="clearAll" type="button">Tout effacer</button>
+            </div>
+            <div class="layer-group">
+              <span>MOBILITÉS</span>
+              <div class="layer-cards">
+                <button class="layer-card active" data-layer="stations"><i class="layer-swatch stations"></i><span><b>Affluence des gares</b><small id="stationStatus">Validations IDFM · 08 h</small></span><i class="layer-switch"></i></button>
+                <button class="layer-card" data-layer="traffic"><span class="live-pulse"></span><span><b>Circulation maintenant</b><small id="trafficStatus">Sytadin · chargement…</small></span><i class="layer-switch"></i></button>
+              </div>
+            </div>
+            <div class="layer-group">
+              <span>ENVIRONNEMENT & SOLS</span>
+              <div class="layer-cards">
+                <button class="layer-card" data-layer="airNoise"><i class="layer-swatch air"></i><span><b>Qualité air-bruit</b><small>Coexposition Airparif · Bruitparif 2024</small></span><i class="layer-switch"></i></button>
+                <button class="layer-card" data-layer="heat"><i class="layer-swatch heat"></i><span><b>Chaleur urbaine</b><small>Îlots morphoclimatiques · IPR</small></span><i class="layer-switch"></i></button>
+                <button class="layer-card" data-layer="artificial"><i class="layer-swatch artificial"></i><span><b>Sols artificialisés</b><small>OCS GE · IGN</small></span><i class="layer-switch"></i></button>
+              </div>
+            </div>
+            <div class="layer-group">
+              <span>ÉQUIPEMENTS & PRÉSENCE</span>
+              <div class="layer-cards">
+                <button class="layer-card" data-layer="equipment"><i class="layer-swatch equipment"></i><span><b>Équipements publics</b><small>Écoles, piscines, bibliothèques, cinémas…</small></span><i class="layer-switch"></i></button>
+                <button class="layer-card" data-layer="temperature"><i class="layer-swatch temperature"></i><span><b>Température maintenant</b><small id="temperatureStatus">Open-Meteo · chargement…</small></span><i class="layer-switch"></i></button>
+              </div>
+            </div>
+            <div class="layer-group">
+              <span>CLASSEMENT SONORE RÉGLEMENTAIRE</span>
+              <div class="layer-cards">
+                <button class="layer-card active" data-layer="csRoad">
+                  <i class="layer-swatch cs-line"></i
+                  ><span
+                    ><b>Routier</b
+                    ><small id="csRoadStatus"
+                      >Catégories 1 à 5 · arrêté n°17-146</small
+                    ></span
+                  ><i class="layer-switch"></i></button
+                ><button class="layer-card active" data-layer="csRail">
+                  <i class="layer-swatch cs-line"></i
+                  ><span
+                    ><b>Ferroviaire</b
+                    ><small id="csRailStatus"
+                      >SNCF, RATP, SGP · arrêté n°16249</small
+                    ></span
+                  ><i class="layer-switch"></i>
+                </button>
+              </div>
+            </div>
+            <div class="layer-group">
+              <span>BRUIT ROUTIER · CARTE STRATÉGIQUE</span>
+              <div class="layer-cards">
+                <button class="layer-card active" data-layer="roadNoise">
+                  <i class="layer-swatch noise-road"></i
+                  ><span
+                    ><b>Niveaux sonores routiers</b
+                    ><small
+                      >Carte stratégique · nuit · classes dB(A)</small
+                    ></span
+                  ><i class="layer-switch"></i></button
+                ><button class="layer-card active" data-layer="roads">
+                  <i class="layer-swatch road"></i
+                  ><span
+                    ><b>Axes routiers principaux</b
+                    ><small>A1 · A15 · A115 · A104 · N184 · RD</small></span
+                  ><i class="layer-switch"></i>
+                </button>
+              </div>
+            </div>
+            <div class="layer-group">
+              <span>BRUIT FERROVIAIRE</span>
+              <div class="layer-cards">
+                <button class="layer-card" data-layer="railNoise">
+                  <i class="layer-swatch noise-rail"></i
+                  ><span
+                    ><b>Niveaux sonores ferroviaires</b
+                    ><small
+                      >Carte stratégique · Lden · classes dB(A)</small
+                    ></span
+                  ><i class="layer-switch"></i></button
+                ><button class="layer-card" data-layer="rails">
+                  <i class="layer-swatch rail"></i
+                  ><span
+                    ><b>Voies ferrées</b
+                    ><small>Réseau et noms des lignes</small></span
+                  ><i class="layer-switch"></i>
+                </button>
+              </div>
+            </div>
+            <div class="layer-group live-group">
+              <span>EN DIRECT</span>
+              <div class="layer-cards">
+                <button class="layer-card" data-layer="aircraft">
+                  <i class="layer-swatch plane"></i
+                  ><span
+                    ><b>Avions maintenant</b
+                    ><small id="aircraftMenuStatus"
+                      >Positions et altitudes ADS-B</small
+                    ></span
+                  ><i class="layer-switch"></i>
+                </button>
+              </div>
+            </div>
+          </section>
+        </div>
+        <button id="openMethod" class="sources-inline">
+          Sources, millésimes et limites
+        </button>
+        <div class="sidebar-footer">
+          <span class="fresh-dot"></span>
+          <div>
+            <strong>Données publiques vérifiées</strong
+            ><small>IDFM · IGN · IPR · Bruitparif · Airparif · Sytadin · ADSB.lol</small>
+          </div>
+        </div>
+      </aside>
+      <section class="map-shell">
+        <div id="map"></div>
+        <div id="mapLegend" class="noise-legend">
+          <strong>Repères actifs</strong>
+          <div id="legendContent">
+            <span><i class="road-line"></i>Axes routiers</span
+            ><span><i class="rail-line"></i>Voies ferrées</span
+            ><span><i class="plane-dot"></i>Aéronefs en direct</span>
+          </div>
+        </div>
+        <div class="map-note">
+          <span class="pulse"></span
+          ><span id="mapStatus"
+            >Cliquez sur la carte pour ouvrir le diagnostic de la zone</span
+          >
+        </div>
+      </section>
+      <aside id="detailPanel" class="detail-panel">
+        <button id="closeDetail" class="close-btn">×</button>
+        <div id="detailContent"></div>
+      </aside>
+    </main>
+    <dialog id="synthesisDialog" class="dialog synthesis-dialog">
+      <button class="dialog-close" data-close="synthesisDialog">×</button>
+      <div id="synthesisContent" class="synthesis-dashboard"></div>
+    </dialog>
+    <dialog id="methodDialog" class="dialog">
+      <button class="dialog-close" data-close="methodDialog">×</button>
+      <div class="dialog-header">
+        <span class="eyebrow">DONNÉES</span>
+        <h2>Sources et millésimes</h2>
+        <p>Chaque couche indique ce qu’elle mesure réellement.</p>
+      </div>
+      <div class="dialog-body">
+        <h3>Bruit routier</h3>
+        <p>
+          DDT 95, carte stratégique de bruit routier de 3e échéance, indicateur
+          nocturne Ln, 2017. Classes de 40 à 75 dB(A). Les axes sont nommés avec
+          OpenStreetMap.
+        </p>
+        <h3>Classement sonore routier et ferroviaire</h3>
+        <p>
+          DDT 95, classement sonore des infrastructures routières (arrêté
+          préfectoral n°17-146) et ferroviaires SNCF, RATP et Société du
+          Grand Paris (arrêté préfectoral n°16249), avec leurs empreintes
+          sonores. Les flux WFS publiés sur data.gouv.fr sont resynchronisés
+          une fois par jour par une action GitHub et publiés en GeoJSON dans
+          ce dépôt — un appel direct depuis le navigateur n’est pas possible,
+          ce service de l’État ne renvoyant pas d’en-tête CORS.
+        </p>
+        <p>
+          Les 5 catégories partagent la même largeur de secteur affecté
+          quel que soit le mode (arrêté du 30 mai 1996, art. 3) : catégorie 1
+          = 300 m (la plus sévère), 2 = 250 m, 3 = 100 m, 4 = 30 m, 5 = 10 m.
+          Pour le routier, ces catégories correspondent à des niveaux sonores
+          de référence LAeq publiés dans l’arrêté n°17-146 (catégorie 1 :
+          jour &gt; 81 dB(A), nuit &gt; 76 dB(A) ; catégorie 5 : jour 60 à
+          65 dB(A), nuit 55 à 60 dB(A)). Dans un secteur affecté, toute
+          construction neuve à usage sensible (habitation, enseignement,
+          santé, hôtellerie) doit respecter un isolement acoustique renforcé,
+          calculé selon la méthode forfaitaire de l’arrêté du 30 mai 1996 :
+          plus la catégorie est basse, plus l’isolement exigé est important.
+        </p>
+        <p>
+          Un clic sur la carte compare le point choisi à la distance
+          réglementaire (« es »/« tampon ») de chaque tronçon classé le plus
+          proche, route ou rail, sans la demi-largeur de chaussée ou de voie :
+          c’est une lecture indicative, pas un certificat d’exposition. Le
+          bruit aérien n’y figure pas. Si la synchronisation échoue, les
+          couches et le rapport de clic l’indiquent au lieu d’afficher une
+          valeur inventée ou périmée.
+        </p>
+        <h3>Bruit ferroviaire</h3>
+        <p>
+          DDT 95, grandes infrastructures SNCF, carte de type A, Lden, 2017.
+          Classes à partir de 55 dB(A). Les lignes sont nommées avec
+          OpenStreetMap.
+        </p>
+        <h3>Aérien en direct</h3>
+        <p>
+          Positions ADS-B fournies par ADSB.lol et renouvelées chaque minute.
+          Altitude, vitesse et type sont affichés lorsqu’ils sont transmis. Le
+          signal de proximité n’est pas un niveau acoustique.
+        </p>
+        <h3>Trafic routier direct</h3>
+        <p>
+          Sytadin est le service de la DiRIF pour les grands axes franciliens.
+          Ses états fluide, ralenti et saturé sont affichés sur la carte et le
+          millésime courant est synchronisé automatiquement toutes les cinq
+          minutes.
+        </p>
+        <div class="source-cards">
+          <div>
+            <h3>Données détaillées</h3>
+            <a href="SOURCES.md" target="_blank">Consulter SOURCES.md ↗</a>
+          </div>
+          <div>
+            <h3>Code source</h3>
+            <a
+              href="https://github.com/DDT95/pulse95"
+              target="_blank"
+              >Voir le dépôt ↗</a
+            >
+          </div>
+        </div>
+      </div>
+    </dialog>
+    <link rel="stylesheet" href="css/fixes.css?v=10" />
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      crossorigin=""
+    ></script>
+    <script src="js/app.js?v=13"></script>
+  </body>
+</html>

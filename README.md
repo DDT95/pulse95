@@ -1,11 +1,16 @@
 # Pulse 95
 
-Carte des mobilités du Val-d’Oise, heure par heure.
+Carte publique des pressions territoriales du Val-d’Oise. Les couches sont indépendantes et superposables :
 
-- Affluence ferroviaire : validations IDFM du 4e trimestre 2025, jour ouvré hors vacances scolaires.
-- Trafic routier : état des tronçons Sytadin / DIRIF, actualisé par le site transport95.
+- validations en gare IDFM ;
+- trafic Sytadin et avions ADS-B en direct ;
+- cartes de bruit Bruitparif et classement sonore réglementaire ;
+- coexposition air-bruit Airparif / Bruitparif ;
+- chaleur urbaine de L’Institut Paris Region et température Open-Meteo ;
+- artificialisation OCS GE de l’IGN ;
+- équipements publics issus des bases publiques OSM, INSEE/BPE et DILA.
 
-Le fichier `data/idfm-validations.json` est construit depuis les API publiques PRIM par `scripts/build_idfm.py`. Aucun score territorial synthétique n’est calculé.
+Un clic sur une gare, un équipement, un îlot de chaleur, un avion ou un point de la carte ouvre le volet de diagnostic. Aucun score synthétique ni donnée inventée n’est calculé.
 
 ## Publication
 
