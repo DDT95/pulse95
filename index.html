@@ -15,7 +15,7 @@
       crossorigin=""
     />
     <link rel="stylesheet" href="css/style.css?v=3" />
-    <link rel="stylesheet" href="css/pulse.css?v=1" />
+    <link rel="stylesheet" href="css/pulse.css?v=2" />
     <link rel="preconnect" href="https://api-adresse.data.gouv.fr" />
   </head>
   <body>
@@ -92,7 +92,7 @@
             <div class="layer-group">
               <span>ÉQUIPEMENTS & PRÉSENCE</span>
               <div class="layer-cards">
-                <button class="layer-card" data-layer="equipment"><i class="layer-swatch equipment"></i><span><b>Équipements publics</b><small>Écoles, piscines, bibliothèques, cinémas…</small></span><i class="layer-switch"></i></button>
+                <button class="layer-card" data-layer="equipment"><i class="layer-swatch equipment"></i><span><b>Influence des équipements</b><small>Masse cumulée · équipements et commerces</small></span><i class="layer-switch"></i></button>
                 <button class="layer-card" data-layer="temperature"><i class="layer-swatch temperature"></i><span><b>Température maintenant</b><small id="temperatureStatus">Open-Meteo · chargement…</small></span><i class="layer-switch"></i></button>
               </div>
             </div>
@@ -276,6 +276,16 @@
           millésime courant est synchronisé automatiquement toutes les cinq
           minutes.
         </p>
+        <h3>Influence des équipements et services</h3>
+        <p>
+          La carte utilise une accessibilité cumulative simple, proche des
+          méthodes décrites par le Cerema : chaque maille de 500 m compte tous
+          les équipements et commerces recensés dans sa maille et les huit
+          mailles voisines, soit une zone d’environ 750 m. Tous les lieux
+          comptent de la même façon : aucune pondération par type ni
+          fréquentation supposée. La progression des couleurs est uniquement
+          visuelle ; le volet affiche toujours le nombre brut et sa composition.
+        </p>
         <div class="source-cards">
           <div>
             <h3>Données détaillées</h3>
@@ -297,6 +307,6 @@
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       crossorigin=""
     ></script>
-    <script src="js/app.js?v=13"></script>
+    <script src="js/app.js?v=14"></script>
   </body>
 </html>

@@ -89,7 +89,7 @@ function pointInRing(lon, lat, ring) {
   return inside;
 }
 function insideTerritory(lon, lat) {
-  const geometry = state.data.buffer?.features?.[0]?.geometry;
+  const geometry = state.data.boundary?.features?.[0]?.geometry;
   if (!geometry) return true;
   const polygons =
     geometry.type === "Polygon" ? [geometry.coordinates] : geometry.coordinates;
@@ -99,8 +99,8 @@ function insideTerritory(lon, lat) {
       !polygon.slice(1).some((hole) => pointInRing(lon, lat, hole)),
   );
 }
-function addTerritoryMask(buffer) {
-  const geometry = buffer.features[0].geometry;
+function addTerritoryMask(boundary) {
+  const geometry = boundary.features[0].geometry;
   const polygons =
     geometry.type === "Polygon" ? [geometry.coordinates] : geometry.coordinates;
   const world = [
@@ -115,8 +115,8 @@ function addTerritoryMask(buffer) {
   state.layers.territoryMask = L.polygon([world, ...holes], {
     pane: "territoryMask",
     stroke: false,
-    fillColor: "#eef1f4",
-    fillOpacity: 1,
+    fillColor: "#d9dde2",
+    fillOpacity: 0.58,
     fillRule: "evenodd",
     interactive: false,
   }).addTo(map);
@@ -190,13 +190,13 @@ Promise.all(
     "commune_stats.json",
     "roads.geojson",
     "rails.geojson",
-    "valdoise-buffer-1km.geojson",
+    "valdoise-boundary.geojson",
   ].map((f) => fetch("data/" + f).then((r) => r.json())),
-).then(([communes, stats, roads, rails, buffer]) => {
+).then(([communes, stats, roads, rails, boundary]) => {
   state.stats = stats;
   state.data.communes = communes;
-  state.data.buffer = buffer;
-  addTerritoryMask(buffer);
+  state.data.boundary = boundary;
+  addTerritoryMask(boundary);
   state.layers.roads = L.geoJSON(roads, {
     pane: "network",
     style: (f) => ({
@@ -692,6 +692,16 @@ loadAircraft();
 setInterval(loadAircraft, 60000);
 const pressureData={stations:[],temperatures:[]};
 function pressureColor(v,max){const r=v/(max||1);return r>.75?"#a90028":r>.5?"#ef6c35":r>.25?"#f2c94c":"#2fb9b3"}
+function equipmentInfluenceLayer(records){
+  const latStep=.0045,lonStep=.007,bins=new Map(),cells=new Set();
+  const key=(y,x)=>`${y}:${x}`;
+  records.forEach(p=>{if(!Number.isFinite(p.lat)||!Number.isFinite(p.lon))return;const y=Math.floor(p.lat/latStep),x=Math.floor(p.lon/lonStep),k=key(y,x);if(!bins.has(k))bins.set(k,[]);bins.get(k).push(p);for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)cells.add(key(y+dy,x+dx))});
+  const summaries=[...cells].map(k=>{const [y,x]=k.split(":").map(Number),near=[];for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)near.push(...(bins.get(key(y+dy,x+dx))||[]));return{y,x,near}}).filter(c=>c.near.length);
+  const maximum=Math.max(...summaries.map(c=>c.near.length),1),colors=["#edf8fb","#b3cde3","#8c96c6","#8856a7","#7a0177"];
+  const group=L.layerGroup(),renderer=L.canvas({pane:"pulse",padding:.6});
+  summaries.forEach(c=>{const intensity=Math.log1p(c.near.length)/Math.log1p(maximum),color=colors[Math.min(4,Math.floor(intensity*5))],bounds=[[c.y*latStep,c.x*lonStep],[(c.y+1)*latStep,(c.x+1)*lonStep]],types=new Map();c.near.forEach(p=>types.set(p.typeLabel||p.type,(types.get(p.typeLabel||p.type)||0)+1));const composition=[...types].sort((a,b)=>b[1]-a[1]);const names=[...new Map(c.near.map(p=>[p.id,p])).values()].slice(0,12);const layer=L.rectangle(bounds,{pane:"pulse",renderer,stroke:false,fillColor:color,fillOpacity:.16+.42*intensity,bubblingMouseEvents:false}).addTo(group);layer.bindTooltip(`<strong>${fmt(c.near.length)} équipements et services</strong><br>dans la zone d’influence (~750 m)`,{sticky:true});layer.on("click",e=>{L.DomEvent.stopPropagation(e);openDetail(`<span class="detail-tag">INFLUENCE DES ÉQUIPEMENTS</span><h2>${fmt(c.near.length)} équipements et services</h2><p>Équipements recensés dans la maille et les mailles voisines, soit environ 750 m autour de cette zone.</p><div class="kpi-grid">${composition.slice(0,4).map(([label,n])=>`<div class="kpi-tile"><small>${esc(label)}</small><strong>${fmt(n)}</strong></div>`).join("")}</div><h3>Principaux lieux recensés</h3><ul>${names.map(p=>`<li><strong>${esc(p.name)}</strong> · ${esc(p.typeLabel||p.type)}</li>`).join("")}</ul><p class="flag-note">Source : ${esc([...new Set(c.near.map(p=>p.source))].join(" · "))}. La couleur représente un nombre de lieux, pas une fréquentation estimée.</p>`)});});
+  return group;
+}
 async function loadPressureLayers(){
   const [idfm,heat,equipment]=await Promise.all([
     fetch("data/idfm-validations.json").then(r=>r.json()),
@@ -702,7 +712,7 @@ async function loadPressureLayers(){
   idfm.stations.forEach(s=>{const value=s.hourly[currentHour]||0;const marker=L.circleMarker([s.lat,s.lon],{pane:"pulse",radius:4+17*Math.sqrt(value/(maximum||1)),color:pressureColor(value,maximum),fillColor:pressureColor(value,maximum),weight:1,fillOpacity:.52,bubblingMouseEvents:false,className:"station-pressure"}).addTo(state.layers.stations);marker.bindTooltip(`<strong>${esc(s.name)}</strong><br>${fmt(value)} validations · ${currentHour} h`,{sticky:true});marker.on("click",()=>openDetail(`<span class="detail-tag">MOBILITÉ · IDFM</span><h2>${esc(s.name)}</h2><div class="kpi-grid"><div class="kpi-tile"><small>${currentHour} h – ${currentHour+1} h</small><strong>${fmt(value)}</strong><em>validations</em></div><div class="kpi-tile warn"><small>Jour ouvré moyen</small><strong>${fmt(s.weekdayAverage)}</strong><em>${esc(idfm.period)}</em></div></div>`))});
   $("stationStatus").textContent=`${idfm.stations.length} gares · ${currentHour} h · IDFM ${idfm.period}`;
   state.layers.heat=L.geoJSON(heat,{pane:"noise",renderer:L.canvas({pane:"noise",padding:.4}),style:f=>{const n=Number(f.properties.day);return{stroke:false,fillColor:["#2c7bb6","#74add1","#c7e9d4","#fee08b","#f46d43","#b2182b"][Math.max(0,Math.min(5,Math.round(n+1)))],fillOpacity:.42,bubblingMouseEvents:false}},onEachFeature:(f,l)=>l.on("click",e=>{L.DomEvent.stopPropagation(e);openDetail(`<span class="detail-tag">CHALEUR · INSTITUT PARIS REGION</span><h2>Îlot morphoclimatique</h2><div class="kpi-grid"><div class="kpi-tile warn"><small>Aléa de jour</small><strong>${fmt(Number(f.properties.day)+1)} / 5</strong></div><div class="kpi-tile"><small>Aléa de nuit</small><strong>${fmt(Number(f.properties.night)+1)} / 5</strong></div></div><p>Zone climatique locale : <b>${esc(f.properties.lcz||"—")}</b></p>`)} )});
-  const equipmentRenderer=L.canvas({pane:"pulse",padding:.5});equipment.records.forEach(p=>{if(!Number.isFinite(p.lat)||!Number.isFinite(p.lon))return;const m=L.circleMarker([p.lat,p.lon],{pane:"pulse",renderer:equipmentRenderer,radius:4,color:"#fff",weight:1,fillColor:p.category==="education"?"#7b4bb7":p.category==="culture"?"#18753c":"#b07800",fillOpacity:.82,bubblingMouseEvents:false}).addTo(state.layers.equipment);m.bindTooltip(`<strong>${esc(p.name)}</strong><br>${esc(p.typeLabel||p.type)}`);m.on("click",()=>openDetail(`<span class="detail-tag">ÉQUIPEMENT · ${esc(p.source)}</span><h2>${esc(p.name)}</h2><div class="kpi-grid"><div class="kpi-tile"><small>Type</small><strong>${esc(p.typeLabel||p.type)}</strong></div><div class="kpi-tile warn"><small>Commune</small><strong>${esc(p.city||"—")}</strong></div></div><p>${esc(p.address||"")}</p>${p.openingHours||p.openingText?`<p class="flag-note"><strong>Horaires publiés :</strong> ${esc(p.openingHours||p.openingText)}</p>`:""}`))});
+  state.layers.equipment=equipmentInfluenceLayer(equipment.records);if(state.active.has("equipment"))state.layers.equipment.addTo(map);
   loadTemperatures();
 }
 async function loadTemperatures(){
@@ -737,7 +747,7 @@ function updateLegend() {
   if(state.active.has("airNoise"))parts.push('<span><i class="air-ramp"></i>Coexposition air-bruit · 2024</span>');
   if(state.active.has("heat"))parts.push('<span><i class="noise-ramp"></i>Aléa chaleur morphoclimatique</span>');
   if(state.active.has("artificial"))parts.push('<span><i class="road-line" style="background:#ff377a"></i>Sols artificialisés · OCS GE</span>');
-  if(state.active.has("equipment"))parts.push('<span><i class="plane-dot" style="background:#18753c"></i>Équipements publics</span>');
+  if(state.active.has("equipment"))parts.push('<span><i class="plane-dot" style="background:#7a1f78"></i>Influence cumulée des équipements · ~750 m</span>');
   if(state.active.has("temperature"))parts.push('<span><i class="plane-dot" style="background:#d7191c"></i>Température actuelle</span>');
   if (state.active.has("traffic"))
     parts.push(
