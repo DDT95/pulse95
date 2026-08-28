@@ -692,7 +692,7 @@ loadAircraft();
 setInterval(loadAircraft, 60000);
 const pressureData={stations:[],temperatures:[]};
 function pressureColor(v,max){const r=v/(max||1);return r>.75?"#a90028":r>.5?"#ef6c35":r>.25?"#f2c94c":"#2fb9b3"}
-function equipmentInfluenceLayer(records){
+function equipmentInfluenceLayer(records,centres){
   const latStep=.0045,lonStep=.007,bins=new Map(),cells=new Set();
   const key=(y,x)=>`${y}:${x}`;
   records.forEach(p=>{if(!Number.isFinite(p.lat)||!Number.isFinite(p.lon))return;const y=Math.floor(p.lat/latStep),x=Math.floor(p.lon/lonStep),k=key(y,x);if(!bins.has(k))bins.set(k,[]);bins.get(k).push(p);for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)cells.add(key(y+dy,x+dx))});
@@ -700,19 +700,23 @@ function equipmentInfluenceLayer(records){
   const maximum=Math.max(...summaries.map(c=>c.near.length),1),colors=["#edf8fb","#b3cde3","#8c96c6","#8856a7","#7a0177"];
   const group=L.layerGroup(),renderer=L.canvas({pane:"pulse",padding:.6});
   summaries.forEach(c=>{const intensity=Math.log1p(c.near.length)/Math.log1p(maximum),color=colors[Math.min(4,Math.floor(intensity*5))],bounds=[[c.y*latStep,c.x*lonStep],[(c.y+1)*latStep,(c.x+1)*lonStep]],types=new Map();c.near.forEach(p=>types.set(p.typeLabel||p.type,(types.get(p.typeLabel||p.type)||0)+1));const composition=[...types].sort((a,b)=>b[1]-a[1]);const names=[...new Map(c.near.map(p=>[p.id,p])).values()].slice(0,12);const layer=L.rectangle(bounds,{pane:"pulse",renderer,stroke:false,fillColor:color,fillOpacity:.16+.42*intensity,bubblingMouseEvents:false}).addTo(group);layer.bindTooltip(`<strong>${fmt(c.near.length)} équipements et services</strong><br>dans la zone d’influence (~750 m)`,{sticky:true});layer.on("click",e=>{L.DomEvent.stopPropagation(e);openDetail(`<span class="detail-tag">INFLUENCE DES ÉQUIPEMENTS</span><h2>${fmt(c.near.length)} équipements et services</h2><p>Équipements recensés dans la maille et les mailles voisines, soit environ 750 m autour de cette zone.</p><div class="kpi-grid">${composition.slice(0,4).map(([label,n])=>`<div class="kpi-tile"><small>${esc(label)}</small><strong>${fmt(n)}</strong></div>`).join("")}</div><h3>Principaux lieux recensés</h3><ul>${names.map(p=>`<li><strong>${esc(p.name)}</strong> · ${esc(p.typeLabel||p.type)}</li>`).join("")}</ul><p class="flag-note">Source : ${esc([...new Set(c.near.map(p=>p.source))].join(" · "))}. La couleur représente un nombre de lieux, pas une fréquentation estimée.</p>`)});});
+  centres.forEach(c=>{const halo=L.circle([c.lat,c.lon],{pane:"pulse",renderer,radius:1000,color:"#7a0177",weight:1,opacity:.55,fillColor:"#c51b8a",fillOpacity:.16,bubblingMouseEvents:false}).addTo(group);halo.bindTooltip(`<strong>${esc(c.name)}</strong><br>grand pôle commercial · repère 1 km`,{sticky:true});halo.on("click",()=>openDetail(`<span class="detail-tag">GRAND PÔLE COMMERCIAL · OSM</span><h2>${esc(c.name)}</h2><div class="kpi-grid"><div class="kpi-tile warn"><small>Repère cartographique</small><strong>1 km</strong><em>ce n’est pas une zone de chalandise</em></div></div><p>Ce halo met en évidence un grand attracteur commercial. Une véritable zone de chalandise nécessiterait des données de surface, de fréquentation et de provenance des visiteurs.</p>`))});
   return group;
 }
 async function loadPressureLayers(){
-  const [idfm,heat,equipment]=await Promise.all([
+  const [idfm,heat,equipment,stops,shopping]=await Promise.all([
     fetch("data/idfm-validations.json").then(r=>r.json()),
     fetch("data/heat_polygons.geojson").then(r=>r.json()),
-    fetch("data/equipment-public.json").then(r=>r.json())
+    fetch("data/equipment-public.json").then(r=>r.json()),
+    fetch("data/idfm-stops.json").then(r=>r.json()),
+    fetch("data/shopping-centres.json").then(r=>r.json())
   ]);
-  pressureData.stations=idfm.stations;const currentHour=Math.max(6,Math.min(23,new Date().getHours()));const maximum=Math.max(...idfm.stations.map(s=>s.hourly[currentHour]||0));
-  idfm.stations.forEach(s=>{const value=s.hourly[currentHour]||0;const marker=L.circleMarker([s.lat,s.lon],{pane:"pulse",radius:4+17*Math.sqrt(value/(maximum||1)),color:pressureColor(value,maximum),fillColor:pressureColor(value,maximum),weight:1,fillOpacity:.52,bubblingMouseEvents:false,className:"station-pressure"}).addTo(state.layers.stations);marker.bindTooltip(`<strong>${esc(s.name)}</strong><br>${fmt(value)} validations · ${currentHour} h`,{sticky:true});marker.on("click",()=>openDetail(`<span class="detail-tag">MOBILITÉ · IDFM</span><h2>${esc(s.name)}</h2><div class="kpi-grid"><div class="kpi-tile"><small>${currentHour} h – ${currentHour+1} h</small><strong>${fmt(value)}</strong><em>validations</em></div><div class="kpi-tile warn"><small>Jour ouvré moyen</small><strong>${fmt(s.weekdayAverage)}</strong><em>${esc(idfm.period)}</em></div></div>`))});
-  $("stationStatus").textContent=`${idfm.stations.length} gares · ${currentHour} h · IDFM ${idfm.period}`;
+  pressureData.stations=idfm.stations;const currentHour=Math.max(6,Math.min(23,new Date().getHours()));const maximum=Math.max(...idfm.stations.map(s=>s.hourly[currentHour]||0)),dailyMaximum=Math.max(...idfm.stations.map(s=>s.weekdayAverage||0)),mobilityRenderer=L.canvas({pane:"pulse",padding:.7});
+  stops.stops.forEach(s=>{const lineCount=s.lines.length,halo=L.circle([s.lat,s.lon],{pane:"pulse",renderer:mobilityRenderer,radius:200,stroke:false,fillColor:"#1666a8",fillOpacity:Math.min(.11,.035+lineCount*.012),bubblingMouseEvents:false}).addTo(state.layers.stations);halo.bindTooltip(`<strong>${esc(s.name)}</strong><br>${fmt(lineCount)} ligne${lineCount>1?"s":""} · aire piétonne 200 m`,{sticky:true});halo.on("click",()=>openDetail(`<span class="detail-tag">ARRÊT · IDFM GTFS</span><h2>${esc(s.name)}</h2><div class="kpi-grid"><div class="kpi-tile"><small>Lignes desservies</small><strong>${fmt(lineCount)}</strong></div><div class="kpi-tile warn"><small>Aire représentée</small><strong>200 m</strong><em>accessibilité piétonne indicative</em></div></div><p>${s.lines.slice(0,12).map(esc).join(" · ")}</p>`))});
+  idfm.stations.forEach(s=>{const value=s.hourly[currentHour]||0,daily=s.weekdayAverage||0,ratio=Math.sqrt(daily/(dailyMaximum||1)),radius=800+700*ratio,color=pressureColor(value,maximum),detail=`<span class="detail-tag">PÔLE-GARE · IDFM</span><h2>${esc(s.name)}</h2><div class="kpi-grid"><div class="kpi-tile"><small>${currentHour} h – ${currentHour+1} h</small><strong>${fmt(value)}</strong><em>validations</em></div><div class="kpi-tile warn"><small>Jour ouvré moyen</small><strong>${fmt(daily)}</strong><em>${esc(idfm.period)}</em></div><div class="kpi-tile"><small>Aire d’influence affichée</small><strong>${fmt(radius)} m</strong><em>socle 800 m + fréquentation</em></div></div>`;const halo=L.circle([s.lat,s.lon],{pane:"pulse",renderer:mobilityRenderer,radius,color,stroke:false,fillColor:color,fillOpacity:.10+.18*ratio,bubblingMouseEvents:false}).addTo(state.layers.stations);halo.bindTooltip(`<strong>${esc(s.name)}</strong><br>${fmt(daily)} validations/jour · influence ${fmt(radius)} m`,{sticky:true});halo.on("click",()=>openDetail(detail));const marker=L.circleMarker([s.lat,s.lon],{pane:"pulse",renderer:mobilityRenderer,radius:5+8*Math.sqrt(value/(maximum||1)),color:"#fff",fillColor:color,weight:1.5,fillOpacity:.92,bubblingMouseEvents:false,className:"station-pressure"}).addTo(state.layers.stations);marker.bindTooltip(`<strong>${esc(s.name)}</strong><br>${fmt(value)} validations · ${currentHour} h`,{sticky:true});marker.on("click",()=>openDetail(detail))});
+  $("stationStatus").textContent=`${idfm.stations.length} gares + ${stops.count} arrêts · IDFM`;
   state.layers.heat=L.geoJSON(heat,{pane:"noise",renderer:L.canvas({pane:"noise",padding:.4}),style:f=>{const n=Number(f.properties.day);return{stroke:false,fillColor:["#2c7bb6","#74add1","#c7e9d4","#fee08b","#f46d43","#b2182b"][Math.max(0,Math.min(5,Math.round(n+1)))],fillOpacity:.42,bubblingMouseEvents:false}},onEachFeature:(f,l)=>l.on("click",e=>{L.DomEvent.stopPropagation(e);openDetail(`<span class="detail-tag">CHALEUR · INSTITUT PARIS REGION</span><h2>Îlot morphoclimatique</h2><div class="kpi-grid"><div class="kpi-tile warn"><small>Aléa de jour</small><strong>${fmt(Number(f.properties.day)+1)} / 5</strong></div><div class="kpi-tile"><small>Aléa de nuit</small><strong>${fmt(Number(f.properties.night)+1)} / 5</strong></div></div><p>Zone climatique locale : <b>${esc(f.properties.lcz||"—")}</b></p>`)} )});
-  state.layers.equipment=equipmentInfluenceLayer(equipment.records);if(state.active.has("equipment"))state.layers.equipment.addTo(map);
+  state.layers.equipment=equipmentInfluenceLayer(equipment.records,shopping.centres);if(state.active.has("equipment"))state.layers.equipment.addTo(map);
   loadTemperatures();
 }
 async function loadTemperatures(){
@@ -743,7 +747,7 @@ document.querySelectorAll(".layer-card").forEach(
 );
 function updateLegend() {
   const parts = [];
-  if(state.active.has("stations"))parts.push('<span><i class="plane-dot" style="background:#b40025"></i>Affluence des gares · IDFM</span>');
+  if(state.active.has("stations"))parts.push('<span><i class="plane-dot" style="background:#b40025"></i>Influence gares et arrêts · IDFM</span>');
   if(state.active.has("airNoise"))parts.push('<span><i class="air-ramp"></i>Coexposition air-bruit · 2024</span>');
   if(state.active.has("heat"))parts.push('<span><i class="noise-ramp"></i>Aléa chaleur morphoclimatique</span>');
   if(state.active.has("artificial"))parts.push('<span><i class="road-line" style="background:#ff377a"></i>Sols artificialisés · OCS GE</span>');

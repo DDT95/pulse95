@@ -77,7 +77,7 @@
             <div class="layer-group">
               <span>MOBILITÉS</span>
               <div class="layer-cards">
-                <button class="layer-card active" data-layer="stations"><i class="layer-swatch stations"></i><span><b>Affluence des gares</b><small id="stationStatus">Validations IDFM · 08 h</small></span><i class="layer-switch"></i></button>
+                <button class="layer-card active" data-layer="stations"><i class="layer-swatch stations"></i><span><b>Influence des transports</b><small id="stationStatus">Gares et arrêts IDFM · chargement…</small></span><i class="layer-switch"></i></button>
                 <button class="layer-card" data-layer="traffic"><span class="live-pulse"></span><span><b>Circulation maintenant</b><small id="trafficStatus">Sytadin · chargement…</small></span><i class="layer-switch"></i></button>
               </div>
             </div>
@@ -286,6 +286,16 @@
           fréquentation supposée. La progression des couleurs est uniquement
           visuelle ; le volet affiche toujours le nombre brut et sa composition.
         </p>
+        <h3>Influence des gares et arrêts</h3>
+        <p>
+          Les arrêts de bus diffusent une aire piétonne de 200 m. Les gares
+          partent d’une aire de référence de 800 m, conforme aux rayons employés
+          dans les études d’Île-de-France Mobilités. Leur rayon et leur intensité
+          augmentent ensuite avec les validations d’un jour ouvré moyen : une
+          gare très fréquentée comme Cergy-Préfecture devient ainsi un véritable
+          pôle d’influence et non un simple point. Le recouvrement des halos fait
+          apparaître les secteurs de forte interconnexion.
+        </p>
         <div class="source-cards">
           <div>
             <h3>Données détaillées</h3>
@@ -299,6 +309,10 @@
               >Voir le dépôt ↗</a
             >
           </div>
+          <div>
+            <h3>Notions scientifiques</h3>
+            <a href="methodologie.html" target="_blank">Lire la documentation ↗</a>
+          </div>
         </div>
       </div>
     </dialog>
@@ -307,6 +321,6 @@
       src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
       crossorigin=""
     ></script>
-    <script src="js/app.js?v=14"></script>
+    <script src="js/app.js?v=15"></script>
   </body>
 </html>
