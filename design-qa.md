@@ -45,6 +45,16 @@ The diagnostic drawer was inspected at readable scale. The commune, BAN address,
 
 final result: passed
 
+## Dataviz and wide diagnostic panel — 28 August 2026
+
+- Departmental view rebuilt as a compact dashboard: station-activity ring, road-data freshness signal, aircraft scale, temperature comfort scale, noise donut and ranked exposure bars.
+- Ranking encodings are explicit: bar length represents exposed residents; the pill gives the exposed share of each commune. This avoids the former ambiguity between counts and percentages.
+- The local diagnostic drawer is now 680 px wide on a 1440 px desktop viewport, with a 213/328 px evidence split. Long regulatory descriptions no longer wrap into narrow, jagged columns.
+- Browser QA at 1440 × 1000: synthesis dialog 1160 × 755 px, two lower columns 428/670 px, no vertical dialog overflow; diagnostic drawer 680 px, no horizontal overflow.
+- Focused screenshots inspected: `/tmp/pulse-synthesis-2.png` and `/tmp/pulse-panel.png`.
+
+final result: passed
+
 ## Soil contribution calibration — 28 August 2026
 
 - The raw OCS GE built/mineral share remains visible and unchanged.
