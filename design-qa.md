@@ -1,4 +1,4 @@
-# Design QA — Carte de stress
+# Design QA — Carte de pression environnementale
 
 - Source visual truth: user captures `/var/folders/3h/px_6bwl96w50x8y34bkz_k_80000gn/T/TemporaryItems/NSIRD_screencaptureui_MFDDwJ/Capture d’écran 2026-08-28 à 11.17.02.png`, `.../NSIRD_screencaptureui_RDXhah/Capture d’écran 2026-08-28 à 11.18.17.png`, `.../NSIRD_screencaptureui_KpZArG/Capture d’écran 2026-08-28 à 11.20.32.png`, and `.../NSIRD_screencaptureui_Wbcmev/Capture d’écran 2026-08-28 à 11.23.18.png`.
 - Implementation: `http://127.0.0.1:8765/`, captured in the Codex in-app browser on 2026-08-28.
