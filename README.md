@@ -1,4 +1,4 @@
-# Carte de stress
+# Carte de pression environnementale
 
 Carte publique des pressions territoriales du Val-d’Oise. Les couches sont indépendantes et superposables :
 
@@ -18,7 +18,7 @@ L’influence des équipements est une mesure cumulative sur une grille de 500 m
 
 Les gares utilisent un socle d’influence de 800 m, élargi visuellement selon leurs validations journalières IDFM. Les arrêts utilisent un rayon de 200 m. Onze grands pôles commerciaux OpenStreetMap sont signalés par un halo de 1 km, explicitement distinct d’une zone de chalandise.
 
-Un clic ouvre une fiche de stress territoriale complète, indépendamment des couches visibles. Les huit sous-notes disponibles sont ramenées sur 100 puis moyennées à poids égal. La fiche est reliée au géocodage inverse BAN de la Géoplateforme et peut être imprimée ou exportée en JSON. Les données brutes et les limites restent affichées avec le score.
+Un clic ouvre une fiche de pression territoriale complète, indépendamment des couches visibles. Les huit sous-notes disponibles sont ramenées sur 100 puis moyennées à poids égal. La fiche est reliée au géocodage inverse BAN de la Géoplateforme et peut être imprimée ou exportée en JSON. Les données brutes et les limites restent affichées avec le score.
 
 ## Publication
 
