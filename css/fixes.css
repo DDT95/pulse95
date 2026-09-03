@@ -437,3 +437,43 @@
   font-size: 12px;
   line-height: 1.4;
 }
+.hour-bars-label {
+  margin: 14px 0 6px;
+  color: var(--muted, #637083);
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.hour-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 60px;
+  padding: 6px 4px 16px;
+  border-radius: 8px;
+  background: #f6f9fa;
+}
+.hour-bar {
+  position: relative;
+  flex: 1;
+  height: var(--h, 10%);
+  min-width: 3px;
+  border-radius: 2px 2px 0 0;
+  background: #8fb7d6;
+}
+.hour-bar.peak {
+  background: #f2a154;
+}
+.hour-bar.now {
+  background: #a90028;
+}
+.hour-bar em {
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #8a95a6;
+  font-size: 7.5px;
+  font-style: normal;
+  white-space: nowrap;
+}
