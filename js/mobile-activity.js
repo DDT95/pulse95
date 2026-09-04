@@ -10,7 +10,7 @@
   const confidenceFactors = [0.4, 0.7, 1];
 
   function mobileLegend() {
-    return '<span><i style="display:inline-flex;align-items:flex-end;gap:2px;width:44px;height:16px;margin-right:7px"><b style="display:block;width:6px;height:6px;border-radius:50%;background:#7fc8c2"></b><b style="display:block;width:10px;height:10px;border-radius:50%;background:#f2b84b"></b><b style="display:block;width:15px;height:15px;border-radius:50%;background:#a8325e"></b></i>Activité mobile · taille = volume · couleur = récurrence</span>';
+    return '<span><i style="display:inline-flex;align-items:flex-end;gap:2px;width:44px;height:16px;margin-right:7px"><b style="display:block;width:6px;height:6px;border-radius:50%;background:#7fc8c2"></b><b style="display:block;width:10px;height:10px;border-radius:50%;background:#f2b84b"></b><b style="display:block;width:15px;height:15px;border-radius:50%;background:#a8325e"></b></i>Activité mobile · taille = emprise réelle des mailles regroupées (500 m mini) · couleur = récurrence</span>';
   }
 
   async function decodeDataset() {
@@ -145,13 +145,15 @@
       const key = `${Math.floor(p.x / clusterPx)}:${Math.floor(p.y / clusterPx)}`;
       let bucket = buckets.get(key);
       if (!bucket) {
-        bucket = { cells: [], tests: 0, latWeight: 0, lonWeight: 0, recurrenceWeight: 0, confidenceWeight: 0, days: 0, weeks: 0 };
+        bucket = { cells: [], tests: 0, latWeight: 0, lonWeight: 0, recurrenceWeight: 0, confidenceWeight: 0, days: 0, weeks: 0, south: Infinity, north: -Infinity, west: Infinity, east: -Infinity };
         buckets.set(key, bucket);
       }
       const weight = Math.max(1, tests);
       bucket.cells.push(cell); bucket.tests += tests; bucket.latWeight += lat * weight; bucket.lonWeight += lon * weight;
       bucket.recurrenceWeight += recurrenceCode * weight; bucket.confidenceWeight += confidenceScore * weight;
       bucket.days = Math.max(bucket.days, days); bucket.weeks = Math.max(bucket.weeks, weeks);
+      bucket.south = Math.min(bucket.south, south); bucket.north = Math.max(bucket.north, north);
+      bucket.west = Math.min(bucket.west, west); bucket.east = Math.max(bucket.east, east);
     });
     return [...buckets.values()].map(bucket => ({
       ...bucket,
@@ -162,11 +164,11 @@
     }));
   }
 
-  function clusterRadius(cluster) {
-    const countBoost = cluster.cells.length > 1 ? Math.log2(cluster.cells.length + 1) * 1.8 : 0;
-    return Math.max(5, Math.min(30, 4 + Math.sqrt(cluster.tests) * 1.15 + countBoost));
-  }
-
+  // La zone affichée doit être l'emprise géographique réelle de la ou des mailles
+  // regroupées — jamais un cercle dont la taille encode un volume de mesures ou
+  // un rayon en pixels arbitraire, qui peut donner une impression de zone plus
+  // petite (ou, à fort zoom, absurdement plus grande) que la réalité. Même
+  // principe que la couche équipements : un rectangle collé aux coordonnées.
   function renderClusters(dataset) {
     const group = state.layers.mobileActivity;
     if (!group) return;
@@ -176,9 +178,9 @@
     clusters.forEach(cluster => {
       const color = recurrenceColors[cluster.recurrenceCode] || recurrenceColors[0];
       const confidenceCode = cluster.confidenceScore >= 70 ? 2 : cluster.confidenceScore >= 40 ? 1 : 0;
-      const radius = clusterRadius(cluster);
-      const circle = L.circleMarker([cluster.lat, cluster.lon], {
-        pane: "presence", renderer, radius, color,
+      const bounds = [[cluster.south, cluster.west], [cluster.north, cluster.east]];
+      const rect = L.rectangle(bounds, {
+        pane: "presence", renderer, color,
         weight: 1 + confidenceCode * 0.55,
         opacity: 0.72 + confidenceCode * 0.08,
         fillColor: color,
@@ -187,12 +189,12 @@
       }).addTo(group);
       const recurrence = recurrenceLabels[cluster.recurrenceCode], confidence = confidenceLabels[confidenceCode];
       const groupText = cluster.cells.length > 1 ? `${fmt(cluster.cells.length)} mailles regroupées · ` : "";
-      circle.bindTooltip(`<strong>${recurrence}</strong><br>${groupText}${fmt(cluster.tests)} mesures<br>${fmt(cluster.days)} jours · ${fmt(cluster.weeks)} semaines · confiance ${confidence.toLowerCase()}`, { sticky: true });
-      circle.on("click", e => {
+      rect.bindTooltip(`<strong>${recurrence}</strong><br>${groupText}${fmt(cluster.tests)} mesures<br>${fmt(cluster.days)} jours · ${fmt(cluster.weeks)} semaines · confiance ${confidence.toLowerCase()}`, { sticky: true });
+      rect.on("click", e => {
         L.DomEvent.stopPropagation(e);
         if (cluster.cells.length === 1 || map.getZoom() >= 14) return openCellDetail(cluster.cells[0]);
-        const bounds = L.latLngBounds(cluster.cells.map(cell => [(cell[0] + cell[2]) / 2, (cell[1] + cell[3]) / 2]));
-        map.fitBounds(bounds.pad(0.45), { maxZoom: Math.min(15, map.getZoom() + 2) });
+        const fitBounds = L.latLngBounds(cluster.cells.map(cell => [(cell[0] + cell[2]) / 2, (cell[1] + cell[3]) / 2]));
+        map.fitBounds(fitBounds.pad(0.45), { maxZoom: Math.min(15, map.getZoom() + 2) });
       });
     });
   }
