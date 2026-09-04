@@ -813,7 +813,7 @@ async function loadAirLive(){
 const airLiveLayer=state.layers.airLive;
 loadAirLive();
 setInterval(loadAirLive,600000);
-const pressureData={stations:[],stops:[],equipment:[],heat:[],temperaturePoints:[]};
+const pressureData={stations:[],stops:[],equipment:[],heat:[],temperaturePoints:[],surfaceLines:null};
 function pressureColor(v,max){const r=v/(max||1);return r>.75?"#a90028":r>.5?"#ef6c35":r>.25?"#f2c94c":"#2fb9b3"}
 const PEAK_HOURS=new Set([7,8,9,17,18,19]);
 function hourlyBarsHtml(hourly,currentHour){
@@ -828,6 +828,12 @@ function stationCrowdingNote(s,currentHour,nearbyStops){
   if(inPeak&&ratio>.55)return `<p class="flag-note">⚠️ Pôle multimodal : ${fmt(busLines)} lignes de bus convergent ici, à quelques mètres des quais. À cette heure de pointe, l’arrivée d’un train ou RER plein peut se combiner à des bus déjà chargés et provoquer un afflux ponctuel sur les quais et abords de gare.</p>`;
   return `<p class="flag-note">Pôle multimodal : ${fmt(busLines)} lignes de bus se croisent à proximité immédiate des quais. Aux heures de pointe (7 h–9 h et 17 h–19 h, pic habituel vers ${peakHour} h), la coïncidence d’un train/RER et de plusieurs bus peut créer une forte affluence localisée.</p>`;
 }
+function busStopEstimate(stop,currentHour){
+  if(!pressureData.surfaceLines)return null;
+  const matched=[],total=stop.lines.reduce((sum,code)=>{const line=pressureData.surfaceLines[code];if(!line)return sum;const v=line.hourly?.[currentHour];if(v==null)return sum;matched.push(code);return sum+v},0);
+  if(!matched.length)return null;
+  return{total:Math.round(total),lines:matched};
+}
 function equipmentInfluenceLayer(records,centres){
   const latStep=.0045,lonStep=.007,bins=new Map(),cells=new Set();
   const key=(y,x)=>`${y}:${x}`;
@@ -840,16 +846,17 @@ function equipmentInfluenceLayer(records,centres){
   return group;
 }
 async function loadPressureLayers(){
-  const [idfm,heat,equipment,stops,shopping]=await Promise.all([
+  const [idfm,heat,equipment,stops,shopping,surface]=await Promise.all([
     fetch("data/idfm-validations.json").then(r=>r.json()),
     fetch("data/heat_polygons.geojson").then(r=>r.json()),
     fetch("data/equipment-public.json").then(r=>r.json()),
     fetch("data/idfm-stops.json").then(r=>r.json()),
-    fetch("data/shopping-centres.json").then(r=>r.json())
+    fetch("data/shopping-centres.json").then(r=>r.json()),
+    fetch("data/idfm-surface.json").then(r=>r.ok?r.json():null).catch(()=>null)
   ]);
   pressureData.stations=idfm.stations;const currentHour=Math.max(6,Math.min(23,new Date().getHours()));const maximum=Math.max(...idfm.stations.map(s=>s.hourly[currentHour]||0)),dailyMaximum=Math.max(...idfm.stations.map(s=>s.weekdayAverage||0)),mobilityRenderer=L.canvas({pane:"pulse",padding:.7});
-  pressureData.stops=stops.stops;pressureData.equipment=equipment.records;pressureData.heat=heat.features;
-  stops.stops.forEach(s=>{const lineCount=s.lines.length,halo=L.circle([s.lat,s.lon],{pane:"pulse",renderer:mobilityRenderer,radius:200,stroke:false,fillColor:"#1666a8",fillOpacity:Math.min(.11,.035+lineCount*.012),bubblingMouseEvents:false}).addTo(state.layers.stations);halo.on("click",()=>showNuisancesAt(s.lon,s.lat));halo.bindTooltip(`<strong>${esc(s.name)}</strong><br>${fmt(lineCount)} ligne${lineCount>1?"s":""} · aire piétonne 200 m`,{sticky:true});halo.on("click",()=>openDetail(`<span class="detail-tag">ARRÊT · IDFM GTFS</span><h2>${esc(s.name)}</h2><div class="kpi-grid"><div class="kpi-tile"><small>Lignes desservies</small><strong>${fmt(lineCount)}</strong></div><div class="kpi-tile warn"><small>Aire représentée</small><strong>200 m</strong><em>accessibilité piétonne indicative</em></div></div><p>${s.lines.slice(0,12).map(esc).join(" · ")}</p>`))});
+  pressureData.stops=stops.stops;pressureData.equipment=equipment.records;pressureData.heat=heat.features;pressureData.surfaceLines=surface?.lines||null;
+  stops.stops.forEach(s=>{const lineCount=s.lines.length,busEstimate=busStopEstimate(s,currentHour),halo=L.circle([s.lat,s.lon],{pane:"pulse",renderer:mobilityRenderer,radius:200,stroke:false,fillColor:"#1666a8",fillOpacity:Math.min(.11,.035+lineCount*.012),bubblingMouseEvents:false}).addTo(state.layers.stations);halo.on("click",()=>showNuisancesAt(s.lon,s.lat));halo.bindTooltip(`<strong>${esc(s.name)}</strong><br>${fmt(lineCount)} ligne${lineCount>1?"s":""} · aire piétonne 200 m`,{sticky:true});halo.on("click",()=>openDetail(`<span class="detail-tag">ARRÊT · IDFM GTFS</span><h2>${esc(s.name)}</h2><div class="kpi-grid"><div class="kpi-tile"><small>Lignes desservies</small><strong>${fmt(lineCount)}</strong></div><div class="kpi-tile warn"><small>Aire représentée</small><strong>200 m</strong><em>accessibilité piétonne indicative</em></div>${busEstimate?`<div class="kpi-tile"><small>${currentHour} h – ${currentHour+1} h (estimation)</small><strong>${fmt(busEstimate.total)}</strong><em>validations sur les lignes desservant l’arrêt</em></div>`:""}</div>${busEstimate?`<p class="flag-note">Estimation indicative : somme des validations horaires publiées par ligne entière (${busEstimate.lines.map(l=>esc(l)).join(", ")}), pas une mesure à cet arrêt précis — le réseau de surface n’a pas de compostage géolocalisé par arrêt.</p>`:""}<p>${s.lines.slice(0,12).map(esc).join(" · ")}</p>`))});
   idfm.stations.forEach(s=>{const value=s.hourly[currentHour]||0,daily=s.weekdayAverage||0,ratio=Math.sqrt(daily/(dailyMaximum||1)),radius=800+700*ratio,color=pressureColor(value,maximum),nearbyStops=stops.stops.filter(st=>distanceMeters(s.lon,s.lat,st.lon,st.lat)<=300),crowdingNote=stationCrowdingNote(s,currentHour,nearbyStops),detail=`<span class="detail-tag">PÔLE-GARE · IDFM</span><h2>${esc(s.name)}</h2><div class="kpi-grid"><div class="kpi-tile"><small>${currentHour} h – ${currentHour+1} h</small><strong>${fmt(value)}</strong><em>validations</em></div><div class="kpi-tile warn"><small>Jour ouvré moyen</small><strong>${fmt(daily)}</strong><em>${esc(idfm.period)}</em></div><div class="kpi-tile"><small>Aire d’influence affichée</small><strong>${fmt(radius)} m</strong><em>socle 800 m + fréquentation</em></div></div><p class="hour-bars-label">Profil horaire des validations · ${esc(idfm.period)}</p>${hourlyBarsHtml(s.hourly,currentHour)}${crowdingNote}`;const halo=L.circle([s.lat,s.lon],{pane:"pulse",renderer:mobilityRenderer,radius,color,stroke:false,fillColor:color,fillOpacity:.10+.18*ratio,bubblingMouseEvents:false}).addTo(state.layers.stations);halo.on("click",()=>showNuisancesAt(s.lon,s.lat));halo.bindTooltip(`<strong>${esc(s.name)}</strong><br>${fmt(daily)} validations/jour · influence ${fmt(radius)} m`,{sticky:true});halo.on("click",()=>openDetail(detail));const marker=L.circleMarker([s.lat,s.lon],{pane:"pulse",renderer:mobilityRenderer,radius:5+8*Math.sqrt(value/(maximum||1)),color:"#fff",fillColor:color,weight:1.5,fillOpacity:.92,bubblingMouseEvents:false,className:"station-pressure"}).addTo(state.layers.stations);marker.on("click",()=>showNuisancesAt(s.lon,s.lat));marker.bindTooltip(`<strong>${esc(s.name)}</strong><br>${fmt(value)} validations · ${currentHour} h`,{sticky:true});marker.on("click",()=>openDetail(detail))});
   state.layers.stations.eachLayer(layer=>layer.off("click").on("click",e=>{L.DomEvent.stopPropagation(e);showNuisancesAt(e.latlng.lng,e.latlng.lat)}));
   $("stationStatus").textContent=`${idfm.stations.length} gares + ${stops.count} arrêts · IDFM`;
