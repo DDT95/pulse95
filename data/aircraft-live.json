@@ -1,10 +1,10 @@
 {"ac":[
-{"hex":"396c7b","type":"adsb_icao_nt","flight":"REF13   ","r":"TWR","t":"TWR","alt_baro":"ground","gs":0.0,"category":"C3","lat":48.719204,"lon":2.393858,"nic":11,"rc":8,"seen_pos":0.833,"nac_p":11,"sil":2,"sil_type":"unknown","mlat":[],"tisb":[],"messages":82725,"seen":0.8,"rssi":-32.5,"dst":24.581,"dir":151.7},
-{"hex":"40643c","type":"adsb_icao","flight":"EZY27UZ ","r":"G-EZUA","t":"A320","alt_baro":34025,"alt_geom":35925,"gs":444.3,"ias":275,"tas":464,"mach":0.792,"wd":272,"ws":24,"oat":-47,"tat":-19,"track":311.26,"track_rate":0.00,"roll":0.18,"mag_heading":307.27,"true_heading":309.42,"baro_rate":0,"geom_rate":0,"squawk":"2777","emergency":"none","category":"A3","nav_qnh":1013.6,"nav_altitude_mcp":34016,"nav_heading":0.00,"lat":49.573746,"lon":2.772024,"nic":8,"rc":186,"seen_pos":0.021,"version":2,"nic_baro":1,"nac_p":9,"nac_v":1,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":146643,"seen":0.0,"rssi":-15.0,"dst":39.613,"dir":41.3}
+{"hex":"396c7b","type":"adsb_icao_nt","flight":"REF13   ","r":"TWR","t":"TWR","alt_baro":"ground","gs":0.0,"category":"C3","lat":48.719198,"lon":2.393863,"nic":11,"rc":8,"seen_pos":1.355,"nac_p":11,"sil":2,"sil_type":"unknown","mlat":[],"tisb":[],"messages":86078,"seen":1.4,"rssi":-32.3,"dst":24.582,"dir":151.7},
+{"hex":"392b3b","type":"adsb_icao_nt","r":"RX05","t":"TWR","alt_baro":"ground","gs":0.0,"category":"C3","lat":49.009735,"lon":2.547842,"nic":11,"rc":8,"seen_pos":2.721,"nac_p":11,"sil":2,"sil_type":"unknown","mlat":[],"tisb":[],"messages":808,"seen":2.7,"rssi":-37.2,"dst":18.085,"dir":103.3}
 ]
 ,"msg": "No error"
-,"now": 1788650388001
+,"now": 1788656749500
 ,"total": 2
-,"ctime": 1788650388001
+,"ctime": 1788656749500
 ,"ptime": 0
 }
