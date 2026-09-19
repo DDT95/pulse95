@@ -1,9 +1,9 @@
 {"ac":[
-{"hex":"3988e5","type":"adsb_icao","flight":"ARL858M ","r":"F-HCHF","t":"E55P","alt_baro":23475,"alt_geom":24600,"gs":345.0,"ias":224,"tas":326,"mach":0.528,"wd":308,"ws":32,"oat":-22,"tat":-8,"track":179.83,"roll":21.62,"mag_heading":182.29,"true_heading":184.24,"baro_rate":1792,"squawk":"1000","category":"A1","nav_qnh":1013.6,"nav_altitude_mcp":28992,"nav_heading":181.41,"nav_modes":["autopilot","lnav","tcas"],"lat":48.540802,"lon":1.941059,"nic":9,"rc":75,"seen_pos":0.098,"version":2,"nic_baro":1,"nac_p":10,"nac_v":2,"sil":3,"sil_type":"perhour","gva":2,"sda":3,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":16468,"seen":0.1,"rssi":-13.3,"dst":33.011,"dir":191.0}
+{"hex":"4080f6","type":"adsb_icao","flight":"EZY96BE ","r":"G-EJCL","t":"A320","alt_baro":35050,"alt_geom":36425,"gs":399.9,"ias":257,"tas":440,"mach":0.760,"wd":332,"ws":46,"oat":-52,"tat":-27,"track":300.67,"track_rate":0.00,"roll":0.35,"mag_heading":301.64,"true_heading":303.79,"baro_rate":-384,"geom_rate":-384,"squawk":"6716","emergency":"none","category":"A3","nav_qnh":1012.8,"nav_altitude_mcp":35008,"lat":49.662346,"lon":2.755119,"nic":8,"rc":186,"seen_pos":0.256,"version":2,"nic_baro":1,"nac_p":8,"nac_v":1,"sil":3,"sil_type":"perhour","gva":1,"sda":3,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":172919,"seen":0.3,"rssi":-18.5,"dst":43.339,"dir":36.0}
 ]
 ,"msg": "No error"
-,"now": 1789775036500
+,"now": 1789781986500
 ,"total": 1
-,"ctime": 1789775036500
+,"ctime": 1789781986500
 ,"ptime": 0
 }
