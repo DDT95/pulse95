@@ -1,9 +1,9 @@
 {"ac":[
-{"hex":"48663e","type":"adsb_icao","flight":"TRA3M   ","r":"PH-YHZ","t":"A21N","alt_baro":36025,"alt_geom":37525,"gs":458.9,"ias":258,"tas":450,"mach":0.780,"wd":243,"ws":10,"oat":-54,"tat":-27,"track":26.96,"track_rate":0.00,"roll":0.00,"mag_heading":24.26,"true_heading":26.14,"baro_rate":0,"geom_rate":-32,"squawk":"1000","category":"A3","nav_qnh":1012.8,"nav_altitude_mcp":36000,"lat":48.881424,"lon":1.744502,"nic":8,"rc":186,"seen_pos":0.000,"version":2,"nic_baro":1,"nac_p":11,"nac_v":1,"sil":3,"sil_type":"perhour","gva":2,"sda":3,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":150033,"seen":0.0,"rssi":-20.6,"dst":18.437,"dir":229.7}
+{"hex":"a50adc","type":"adsb_icao","flight":"DAL240  ","r":"N424DX","t":"A339","alt_baro":39000,"alt_geom":40525,"gs":477.2,"ias":253,"tas":464,"mach":0.816,"wd":245,"ws":18,"oat":-60,"tat":-32,"track":109.08,"track_rate":0.00,"roll":-0.18,"mag_heading":108.63,"true_heading":110.67,"baro_rate":64,"geom_rate":32,"squawk":"5202","emergency":"none","category":"A5","nav_qnh":1013.6,"nav_altitude_mcp":39008,"nav_heading":0.00,"lat":48.622421,"lon":2.277550,"nic":8,"rc":186,"seen_pos":0.438,"version":2,"nic_baro":1,"nac_p":10,"nac_v":2,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":70523,"seen":0.1,"rssi":-16.4,"dst":28.381,"dir":165.6}
 ]
 ,"msg": "No error"
-,"now": 1790378919000
+,"now": 1790387571001
 ,"total": 1
-,"ctime": 1790378919000
+,"ctime": 1790387571001
 ,"ptime": 0
 }
