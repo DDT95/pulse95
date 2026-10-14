@@ -1,8 +1,11 @@
 {"ac":[
+{"hex":"342445","type":"mlat","flight":"FTL922  ","r":"EC-GJM","t":"SW4","alt_baro":24000,"gs":126.0,"track":28.00,"baro_rate":0,"squawk":"1000","lat":48.684912,"lon":1.892157,"nic":0,"rc":0,"seen_pos":2.193,"alert":0,"spi":0,"mlat":["gs","track","baro_rate","lat","lon","nic","rc"],"tisb":[],"messages":138985,"seen":0.8,"rssi":-8.9,"dst":25.120,"dir":199.2},
+{"hex":"348102","type":"adsb_icao","flight":"SWT5RS  ","r":"EC-OIF","t":"AT76","alt_baro":10300,"alt_geom":11050,"gs":211.5,"ias":171,"tas":202,"mach":0.312,"wd":278,"ws":27,"track":165.77,"roll":-19.16,"mag_heading":170.68,"true_heading":172.77,"baro_rate":1088,"geom_rate":1088,"squawk":"1000","category":"A2","nav_qnh":1013.6,"nav_altitude_mcp":19008,"nav_heading":180.70,"lat":48.786118,"lon":2.351990,"nic":8,"rc":186,"seen_pos":0.268,"version":2,"nic_baro":1,"nac_p":11,"nac_v":2,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":14587,"seen":0.0,"rssi":-6.0,"dst":20.258,"dir":150.5},
+{"hex":"3c5421","type":"adsb_icao","flight":"BCS2EV  ","r":"D-AEAA","t":"A306","alt_baro":625,"alt_geom":1250,"gs":135.4,"ias":140,"tas":142,"mach":0.216,"wd":338,"ws":18,"track":265.76,"track_rate":0.03,"roll":0.18,"mag_heading":270.88,"true_heading":273.05,"baro_rate":-832,"geom_rate":-768,"squawk":"1000","category":"A5","nav_altitude_mcp":4000,"nav_heading":263.67,"lat":48.997971,"lon":2.660029,"nic":7,"rc":371,"seen_pos":0.138,"version":2,"nic_baro":1,"nac_p":9,"nac_v":1,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":151505,"seen":0.1,"rssi":-20.3,"dst":22.539,"dir":102.4}
 ]
 ,"msg": "No error"
-,"now": 1791932531000
-,"total": 0
-,"ctime": 1791932531000
+,"now": 1791942517500
+,"total": 3
+,"ctime": 1791942517500
 ,"ptime": 0
 }
