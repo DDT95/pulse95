@@ -1,11 +1,8 @@
 {"ac":[
-{"hex":"39c420","type":"adsb_icao","flight":"F-HRBA  ","r":"F-HRBA","t":"B789","alt_baro":"ground","gs":0.0,"mag_heading":171.56,"true_heading":173.69,"squawk":"2000","emergency":"none","category":"A5","lat":49.015171,"lon":2.509865,"nic":8,"rc":186,"seen_pos":2.628,"version":2,"nac_p":9,"nac_v":1,"sil":3,"sil_type":"perhour","sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":804,"seen":2.6,"rssi":-31.2,"dst":16.558,"dir":103.4},
-{"hex":"3b76ae","type":"adsb_icao","flight":"CTM001  ","r":"F-RARF","t":"A332","dbFlags":1,"alt_baro":3600,"alt_geom":4025,"gs":208.0,"ias":203,"tas":208,"mach":0.328,"wd":145,"ws":3,"track":88.90,"track_rate":0.00,"roll":0.00,"mag_heading":87.54,"true_heading":89.68,"baro_rate":448,"geom_rate":416,"squawk":"0664","emergency":"none","category":"A5","nav_qnh":1024.8,"nav_altitude_mcp":8992,"lat":48.742767,"lon":2.543053,"nic":8,"rc":186,"seen_pos":0.127,"version":2,"nic_baro":1,"nac_p":11,"nac_v":1,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":2169,"seen":0.1,"rssi":-6.1,"dst":26.743,"dir":139.0},
-{"hex":"4cad39","type":"adsb_icao","flight":"RYR55EC ","r":"EI-HEY","t":"B38M","alt_baro":36000,"alt_geom":36375,"gs":485.6,"ias":258,"tas":458,"mach":0.780,"wd":139,"ws":30,"oat":-46,"tat":-18,"track":335.55,"track_rate":0.03,"roll":0.00,"mag_heading":334.51,"true_heading":336.63,"baro_rate":64,"geom_rate":32,"squawk":"5512","emergency":"none","category":"A3","nav_qnh":1013.6,"nav_altitude_mcp":36000,"nav_altitude_fms":36000,"nav_heading":333.98,"lat":49.190643,"lon":2.553687,"nic":8,"rc":186,"seen_pos":0.297,"version":2,"nic_baro":1,"nac_p":11,"nac_v":2,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":83822,"seen":0.1,"rssi":-17.3,"dst":18.985,"dir":69.4}
 ]
 ,"msg": "No error"
-,"now": 1792364791000
-,"total": 3
-,"ctime": 1792364791000
+,"now": 1792372223001
+,"total": 0
+,"ctime": 1792372223001
 ,"ptime": 0
 }
