@@ -1,11 +1,9 @@
 {"ac":[
-{"hex":"40643b","type":"adsb_icao","flight":"EZY8150 ","r":"G-EZTY","t":"A320","alt_baro":36150,"alt_geom":37150,"gs":374.8,"ias":259,"tas":456,"mach":0.788,"wd":296,"ws":85,"oat":-53,"tat":-25,"track":315.22,"track_rate":-0.03,"roll":0.18,"mag_heading":309.73,"true_heading":311.70,"baro_rate":-1024,"geom_rate":-896,"squawk":"5751","emergency":"none","category":"A3","nav_qnh":1013.6,"nav_altitude_mcp":35008,"nav_heading":0.00,"lat":49.803864,"lon":2.086752,"nic":8,"rc":186,"seen_pos":0.255,"version":2,"nic_baro":1,"nac_p":9,"nac_v":1,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":78209,"seen":0.1,"rssi":-15.2,"dst":43.513,"dir":359.3},
-{"hex":"40066c","type":"adsb_icao","flight":"DHK463  ","r":"G-BMRJ","t":"B752","alt_baro":36000,"alt_geom":37000,"gs":375.7,"ias":262,"tas":460,"mach":0.792,"wd":294,"ws":90,"oat":-51,"tat":-23,"track":316.83,"track_rate":-0.03,"roll":0.18,"mag_heading":310.43,"true_heading":312.49,"baro_rate":0,"geom_rate":0,"squawk":"5722","emergency":"none","category":"A4","nav_qnh":1012.8,"nav_altitude_mcp":36000,"nav_heading":317.81,"nav_modes":["vnav","tcas"],"lat":49.796860,"lon":2.411282,"nic":8,"rc":186,"seen_pos":0.070,"version":2,"nic_baro":1,"nac_p":9,"nac_v":1,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":72626,"seen":0.1,"rssi":-9.6,"dst":44.763,"dir":15.6},
-{"hex":"3c7421","type":"adsb_icao","flight":"TUI6HA  ","r":"D-AMAA","t":"B38M","alt_baro":36000,"alt_geom":37075,"gs":498.4,"ias":265,"tas":462,"mach":0.796,"wd":292,"ws":73,"oat":-51,"tat":-23,"track":55.96,"track_rate":0.00,"roll":0.00,"mag_heading":46.05,"true_heading":48.35,"baro_rate":0,"geom_rate":32,"squawk":"1000","category":"A3","nav_qnh":1013.6,"nav_altitude_mcp":36000,"nav_altitude_fms":36000,"nav_heading":45.70,"lat":49.217679,"lon":3.199624,"nic":8,"rc":186,"seen_pos":0.026,"version":2,"nic_baro":1,"nac_p":11,"nac_v":2,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":208720,"seen":0.0,"rssi":-13.7,"dst":43.876,"dir":78.7}
+{"hex":"4aca14","type":"adsb_icao","flight":"NSZ3407 ","r":"SE-RPT","t":"B738","alt_baro":36000,"alt_geom":36900,"gs":497.3,"ias":257,"tas":452,"mach":0.776,"wd":273,"ws":88,"oat":-50,"tat":-23,"track":37.98,"track_rate":0.00,"roll":0.00,"mag_heading":26.89,"true_heading":28.76,"baro_rate":0,"geom_rate":0,"squawk":"2343","emergency":"none","category":"A3","nav_qnh":1013.6,"nav_altitude_mcp":36000,"nav_altitude_fms":36000,"nav_heading":28.12,"lat":49.708145,"lon":1.736129,"nic":8,"rc":186,"seen_pos":0.293,"version":2,"nic_baro":1,"nac_p":9,"nac_v":1,"sil":3,"sil_type":"perhour","gva":2,"sda":2,"alert":0,"spi":0,"mlat":[],"tisb":[],"messages":141075,"seen":0.0,"rssi":-22.4,"dst":40.334,"dir":339.5}
 ]
 ,"msg": "No error"
-,"now": 1792884987001
-,"total": 3
-,"ctime": 1792884987001
+,"now": 1792892209500
+,"total": 1
+,"ctime": 1792892209500
 ,"ptime": 0
 }
